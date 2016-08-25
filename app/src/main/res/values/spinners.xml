@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="beacon_type">
+        <item>iBeacon</item>
+        <item>Eddystone UID</item>
+        <item>Eddystone URL</item>
+        <item>Eddystone TLM</item>
+        <item>AltBeacon</item>
+    </string-array>
+    <string-array name="beacon_type_value">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+    <string-array name="tx_power">
+        <item>4 dbm</item>
+        <item>0 dbm</item>
+        <item>-4 dbm</item>
+        <item>-8 dbm</item>
+        <item>-12 dbm</item>
+        <item>-16 dbm</item>
+        <item>-20 dbm</item>
+        <item>-40 dbm</item>
+    </string-array>
+    <string-array name="tx_power_value">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+    </string-array>
+    <string-array name="extensions">
+        <item>.com/</item>
+        <item>.org/</item>
+        <item>.edu/</item>
+        <item>.net/</item>
+        <item>.info/</item>
+        <item>.biz/</item>
+        <item>.gov/</item>
+        <item>.com</item>
+        <item>.org</item>
+        <item>.edu</item>
+        <item>.net</item>
+        <item>.info</item>
+        <item>.biz</item>
+        <item>.gov</item>
+    </string-array>
+
+    <string-array name="extensions_value">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+    </string-array>
+
+    <string-array name="device_mode">
+        <item>beacon mode</item>
+        <item>Environment sensing mode</item>
+    </string-array>
+    <string-array name="device_mode_value">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+</resources>

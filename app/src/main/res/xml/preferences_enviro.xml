@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="General settings">
+
+        <EditTextPreference
+            android:title="Device name"
+            android:summary="Set the name of the device"
+            android:dialogTitle="Set device name"
+            android:key="device_name_enviro"/>
+
+        <EditTextPreference
+            android:title="Connection intervals"
+            android:summary="Set the intervals during a connection"
+            android:dialogTitle="Set connection intervals"
+            android:key="connection_intervals_enviro"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Accelerometer sensor">
+
+        <CheckBoxPreference
+            android:title="On/Off"
+            android:summary="Set the sensor on or off"
+            android:key="accelerometer_checkbox_enviro"/>
+
+        <wibicom.wibeacon3.SliderDialog
+            android:title="Period"
+            android:summary="Set the refreshing rate of the sensor"
+            android:dialogMessage="Set the refreshing rate of the accelerometer sensor"
+            android:dialogTitle="Set sensor period"
+            android:key="accelerometer_period_enviro" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Weather sensors">
+
+        <CheckBoxPreference
+            android:title="On/Off"
+            android:summary="Set the temperature, humidity and pressure sensors on or off."
+            android:key="weather_checkbox_enviro"/>
+
+        <wibicom.wibeacon3.SliderDialog
+            android:title="Period"
+            android:summary="Set the refreshing rate of the sensor"
+            android:dialogTitle="Set sensor period"
+            android:dialogMessage="Set the refreshing rate of the temperature, pressure and humidity sensors"
+            android:key="weather_period_enviro"/>
+
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="ADC light approximation">
+
+        <CheckBoxPreference
+            android:title="On/Off"
+            android:summary="Set the ADC on or off"
+            android:key="light_checkbox_enviro"/>
+
+        <wibicom.wibeacon3.SliderDialog
+            android:title="Period"
+            android:summary="Set the refreshing rate of the sensor"
+            android:dialogTitle="Set sensor period"
+            android:dialogMessage="Set the refreshing rate of the analog to digital converter"
+            android:key="light_period_enviro"/>
+
+
+    </PreferenceCategory>
+
+
+
+
+
+</PreferenceScreen>

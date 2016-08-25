@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <PreferenceCategory
+        android:title="General settings">
+
+        <EditTextPreference
+            android:title="Device name"
+            android:summary="Set the name of the device"
+            android:dialogTitle="Set device name"
+            android:key="device_name_move"/>
+
+        <ListPreference
+            android:title="Device mode"
+            android:summary="Set the peripheral as a beacon or as a monitoring device"
+            android:dialogTitle="Set device name"
+            android:key="device_mode_move"
+            android:entries="@array/device_mode"
+            android:entryValues="@array/device_mode_value"/>
+
+        <ListPreference
+            android:title="Transmit power"
+            android:summary="Higher value will result in a bigger range"
+            android:dialogTitle="Test"
+            android:key="tx_power_move"
+            android:entryValues="@array/tx_power"
+            android:entries="@array/tx_power_value" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Beacon settings">
+
+        <!--<wibicom.wibeacon3.BeaconDialog-->
+            <!--android:title="Beacon format"-->
+            <!--android:summary="Change the format of the advertising packets"-->
+            <!--android:entries="@array/beacon_type"-->
+            <!--android:entryValues="@array/beacon_type_value"-->
+            <!--android:dialogTitle="Advertising packet format"-->
+            <!--android:dialogMessage="Change the format of the advertising packets"-->
+            <!--android:key="beacon_format_move"/>-->
+
+
+
+        <PreferenceScreen
+            android:title="Beacon format"
+            android:summary="Change the format of the advertising packets">
+            <PreferenceCategory
+                android:title="Advertising format">
+
+                <ListPreference
+                    android:title="Beacon format"
+                    android:summary="Change the format of the advertising packets"
+                    android:dialogTitle="Advertising packet format"
+                    android:key="beacon_format_move"
+                    android:entryValues="@array/beacon_type_value"
+                    android:entries="@array/beacon_type" />
+
+            </PreferenceCategory>
+
+            <PreferenceCategory
+                android:title="Advertising content">
+
+                <PreferenceScreen
+                    android:title="iBeacon settings"
+                    android:summary="Change the content of the advertising packets">
+
+
+                    <EditTextPreference
+                        android:title="UUID"
+                        android:summary="Summary"
+                        android:dialogTitle="Set UUID"
+                        android:key="ibeacon_uuid"/>
+                    <EditTextPreference
+                        android:title="Major"
+                        android:summary="Summary"
+                        android:dialogTitle="Set Major"
+                        android:key="ibeacon_major"/>
+                    <EditTextPreference
+                        android:title="Minor"
+                        android:summary="Summary"
+                        android:dialogTitle="Set Minor"
+                        android:key="ibeacon_minor"/>
+
+                </PreferenceScreen>
+
+                <PreferenceScreen
+                    android:title="Eddystone UID"
+                    android:summary="Change the content of the advertising packets">
+
+                    <EditTextPreference
+                        android:title="Namespace ID"
+                        android:summary="Summary"
+                        android:dialogTitle="Set Namespace ID"
+                        android:key="eddystone_namespace_id"/>
+                    <EditTextPreference
+                        android:title="Instance ID"
+                        android:summary="Summary"
+                        android:dialogTitle="Set Instance ID"
+                        android:key="eddystone_instance_id"/>
+
+                </PreferenceScreen>
+
+                <PreferenceScreen
+                    android:title="Eddystone URL"
+                    android:summary="Change the content of the advertising packets">
+
+                    <EditTextPreference
+                        android:title="Url"
+                        android:summary="Summary"
+                        android:dialogTitle="Set Url"
+                        android:key="eddystone_url"/>
+                    <ListPreference
+                        android:title="Url extension"
+                        android:summary="Summary"
+                        android:dialogTitle="Set Url"
+                        android:key="eddystone_url_extension"
+                        android:entryValues="@array/extensions_value"
+                        android:entries="@array/extensions" />/>
+
+                </PreferenceScreen>
+
+                <PreferenceScreen
+                    android:title="Eddystone TLM"
+                    android:summary="No content to set">
+                </PreferenceScreen>
+
+                <PreferenceScreen
+                    android:title="Altbeacon"
+                    android:summary="Coming soon">
+                </PreferenceScreen>
+
+            </PreferenceCategory>
+
+
+        </PreferenceScreen>
+
+        <wibicom.wibeacon3.SliderDialog
+            android:title="Advertising intervals"
+            android:summary="Set the time intervals between advertising events"
+            android:dialogTitle="Set advertising intervals"
+            android:dialogMessage="Set the time intervals between advertising events"
+            android:key="advertising_intervals_move" />
+
+        <CheckBoxPreference
+            android:title="Smart power mode"
+            android:summary="Smart power mode automatically changes the advertising intervals depending of the ambient light and the battery level"
+            android:key="smart_power_mode_move"/>
+
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Environment monitoring"
+        android:subtitle="Accelerometer">
+
+        <CheckBoxPreference
+            android:title="On/Off"
+            android:summary="Set the sensor on or off"
+            android:key="accelerometer_checkbox_move"/>
+
+        <wibicom.wibeacon3.SliderDialog
+            android:title="Period"
+            android:summary="Set the refreshing rate of the sensor"
+            android:dialogMessage="Set the refreshing rate of the accelerometer sensor"
+            android:dialogTitle="Set sensor period"
+            android:key="accelerometer_period_move" />
+
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

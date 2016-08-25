@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/account_drawer"
+            android:icon="@drawable/ic_account_box_black_24px"
+            android:title="Account"
+            android:textColor="#FFFFFF"/>
+
+        <item
+            android:id="@+id/beacon_scanner_drawer"
+            android:icon="@drawable/ic_track_changes_black_24px"
+            android:title="Beacon scanner"
+            android:textColor="#FFB7C6CD"/>
+
+        <item
+            android:id="@+id/app_settings_drawer"
+            android:icon="@drawable/ic_settings_black_24px"
+            android:title="Settings"
+            android:textColor="#FFB7C6CD"/>
+
+
+    </group>
+
+    <item android:title="More"
+        android:textColor="#FFB7C6CD" >
+
+        <menu>
+
+            <item
+                android:id="@+id/about_drawer"
+                android:icon="@drawable/ic_info_black_24dp"
+                android:title="About"
+                android:textColor="#FFB7C6CD"/>
+            <item
+                android:id="@+id/feedback_drawer"
+                android:icon="@drawable/ic_menu_send"
+                android:title="Send feedback"
+                android:textColor="#FFB7C6CD"/>
+
+            <item
+                android:id="@+id/share_drawer"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Tell friends"
+                android:textColor="#FFB7C6CD"/>
+            <item
+                android:id="@+id/nav_share_drawer"
+                android:icon="@drawable/ic_open_in_browser_black_24px"
+                android:title="Go to wibicom.com"
+                android:textColor="#FFB7C6CD"/>
+
+        </menu>
+    </item>
+
+</menu>

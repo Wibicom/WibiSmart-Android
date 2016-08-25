@@ -1,0 +1,26 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="wibicom.wibeacon3.Settings.FragmentSettings">
+
+    <FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/fragment_settings_container"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+
+        <TextView
+            android:id="@+id/settings_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect to a device to change the settings."
+            android:layout_marginLeft="0dp"
+            android:textColor="#dd1a1a1a"
+            android:layout_gravity="center_horizontal|top"
+            android:layout_marginTop="100dp"
+            android:textSize="17dp" />
+
+    </FrameLayout>
+
+</FrameLayout>

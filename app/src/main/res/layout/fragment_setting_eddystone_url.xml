@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignTop="@+id/imageView7"
+        android:layout_above="@+id/button4" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="URL:"
+        android:id="@+id/url"
+        android:layout_gravity="left|top"
+        android:layout_marginTop="50dp"
+        android:layout_marginLeft="5dp"
+        android:textColor="#000000" />
+
+    <EditText
+        android:layout_width="197dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/editText_url"
+        android:layout_gravity="center_horizontal|top"
+        android:layout_marginTop="35dp"
+        android:text="salutmonami"
+        android:textColor="#000000" />
+
+    <Spinner
+        android:layout_width="84dp"
+        android:layout_height="41dp"
+        android:id="@+id/spinner_url"
+        android:layout_gravity="right|top"
+        android:layout_marginTop="30dp"
+        android:theme="@style/AlertDialog.AppCompat.Light" />
+
+</FrameLayout>

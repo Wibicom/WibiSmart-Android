@@ -66,7 +66,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import org.altbeacon.beacon.*;
+//import org.altbeacon.beacon.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -87,10 +87,10 @@ import wibicom.wibeacon3.Settings.FragmentSettingsMove;
  * @author Olivier Tessier-Lariviere
  */
 @TargetApi(21)
-public class MainActivity extends AppCompatActivity implements BeaconConsumer, RangeNotifier, FragmentScanner.OnListFragmentInteractionListener, FragmentPushToCloud.OnPushToCloudInteractionListener, FragmentSettingsEnviro.OnSettingsEnviroListener, FragmentSettingsMove.OnSettingsMoveListener {//, FragmentDashboardMove.OnFragmentInteractionListener {
-    private BeaconManager beaconManager;
+public class MainActivity extends AppCompatActivity implements /*BeaconConsumer, RangeNotifier,*/ FragmentScanner.OnListFragmentInteractionListener, FragmentPushToCloud.OnPushToCloudInteractionListener, FragmentSettingsEnviro.OnSettingsEnviroListener, FragmentSettingsMove.OnSettingsMoveListener {//, FragmentDashboardMove.OnFragmentInteractionListener {
+    //private BeaconManager beaconManager;
     private DrawerLayout mDrawerLayout;
-    Collection<Beacon> beaconsInRange;
+    //Collection<Beacon> beaconsInRange;
 
     private BluetoothLeScanner mBluetoothLeScanner;
     private ScanSettings settings;
@@ -434,7 +434,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer, R
                 sensor.getAccelerometerX(), sensor.getAccelerometerY(), sensor.getAccelerometerZ());
 
         }
-        else if(isCharArrayEquals(mBluetoothLeService.modelNumberString, mBluetoothLeService.ENVIRO_MODEL_NUMBER_STRING))
+        else if(isCharArrayEquals(mBluetoothLeService.modelNumberString, mBluetoothLeService.ENVIRO_MODEL_NUMBER_STRING) || isCharArrayEquals(mBluetoothLeService.modelNumberString, mBluetoothLeService.ENVIRO_MODEL_NUMBER_STRING_TEMP))
         {
             mBluetoothLeService.readRemoteRssi();
             setEnviroUi();
@@ -501,8 +501,8 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer, R
 //        beaconManager.bind(this);
     }
 
-    @Override
-    public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
+    //@Override
+    //public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
 
 //        beaconsInRange = beacons;
 //        String beaconName = "Unknown";
@@ -563,10 +563,10 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer, R
 //            sendNotification(beaconName);
 //
 //        }
-    }
+  // }
 
-    @Override
-    public void onBeaconServiceConnect() {
+    //@Override
+    //public void onBeaconServiceConnect() {
 //        Identifier myBeaconNamespaceId = null;//Identifier.parse("0x2f234454f4911ba9ffa6");
 //        Identifier myBeaconInstanceId = null; //Identifier.parse("0x000000000001");
 //        final Region region = new Region("all-beacons-region", myBeaconNamespaceId, myBeaconInstanceId, null);//Identifier.parse("00EEAAAABBBBCCCCDDDDEEEE0102030405060000"), null, null);
@@ -577,7 +577,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer, R
 //        } catch (RemoteException e) {
 //            e.printStackTrace();
 //        }
-    }
+    //}
 
 
     private void logToDisplay(final String line, final int id) {

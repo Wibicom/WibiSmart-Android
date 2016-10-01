@@ -5,6 +5,8 @@ import android.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.TextView;
 
 import wibicom.wibeacon3.R;
@@ -23,6 +25,12 @@ public class FragmentDashboardEnviro extends Fragment {
     TextView lightText;
 
     int batteryLevel;
+
+    WebView webViewTemperature;
+    WebView webViewHumidity;
+    WebView webViewPressure;
+
+    WebView webViewAccelerometer;
 
 
 
@@ -55,11 +63,42 @@ public class FragmentDashboardEnviro extends Fragment {
 
         batteryLevelText.setText(Integer.toString(batteryLevel) + " %");
 
+        webViewTemperature = (WebView) view.findViewById(R.id.webviewTemperature);
+        webViewHumidity = (WebView) view.findViewById(R.id.webviewHumidity);
+        webViewPressure = (WebView) view.findViewById(R.id.webviewPressure);
+        webViewAccelerometer = (WebView) view.findViewById(R.id.webviewAccelerometer);
+
+
+        // Enable JavaScript
+        webViewTemperature.getSettings().setJavaScriptEnabled(true);
+        webViewHumidity.getSettings().setJavaScriptEnabled(true);
+        webViewPressure.getSettings().setJavaScriptEnabled(true);
+        webViewAccelerometer.getSettings().setJavaScriptEnabled(true);
+
+        // Load the html file
+        webViewTemperature.loadUrl("file:///android_asset/temperature_widget.html");
+        webViewHumidity.loadUrl("file:///android_asset/humidity_widget.html");
+        webViewPressure.loadUrl("file:///android_asset/pressure_widget.html");
+        webViewAccelerometer.loadUrl("file:///android_asset/accelerometer_widget.html");
+
+
+
         return view;
     }
 
     public void updateData(float temperature, float pressure, float humidity, float accelerometerX, float accelerometerY, float accelerometerZ, int batteryLevel, int rssi, int light)
     {
+        //webViewTemperature.loadUrl("file:///android_asset/temperature_widget.html");
+        //webViewTemperature.loadUrl("javascript:updateTemperature()");
+        if(webViewTemperature != null)
+            webViewTemperature.loadUrl("javascript:updateTemperature(" + Float.toString(temperature) + ")");
+        if(webViewHumidity != null)
+            webViewHumidity.loadUrl("javascript:updateHumidity(" + Float.toString(humidity) + ")");
+        if(webViewPressure != null)
+            webViewPressure.loadUrl("javascript:updatePressure(" + Float.toString(pressure) + ")");
+
+        if(webViewAccelerometer != null)
+            webViewAccelerometer.loadUrl("javascript:set_accelerometer_data(" + Float.toString(accelerometerX) + ", " + Float.toString(accelerometerY) + ", " + Float.toString(accelerometerZ) + ")");
 
         if(batteryLevelText != null)
             batteryLevelText.setText(Integer.toString(batteryLevel) + " %");

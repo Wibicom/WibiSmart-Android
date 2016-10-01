@@ -71,6 +71,7 @@ public class BluetoothLeService extends Service {
 
     public final static char[] MOVE_MODEL_NUMBER_STRING = {'0', '0', '0', '1'};
     public final static char[] ENVIRO_MODEL_NUMBER_STRING = {'E', 'n', 'v', 'i', 'r', 'o'};
+    public final static char[] ENVIRO_MODEL_NUMBER_STRING_TEMP = {'M', 'o', 'd', 'e', 'l', ' ', 'N', 'u', 'm', 'b', 'e', 'r'};
 
 
     boolean isBusyWritting = false;

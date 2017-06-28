@@ -46,7 +46,7 @@ public class SensorData {
 
     public void setAccelerometer(byte[] accelerometerData)
     {
-        accelerometerX = Math.round((float)(accelerometerData[1] * 0x100 + accelerometerData[0]) * 0.488f * 10)/10f;
+        accelerometerX = Math.round((float)(accelerometerData[1] * 0x100 + (char)(accelerometerData[0] & 0xFF)) * 0.488f * 10)/10f;
         accelerometerY = Math.round((float)(accelerometerData[3] * 0x100 + accelerometerData[2]) * 0.488f * 10)/10f;
         accelerometerZ = Math.round((float)(accelerometerData[5] * 0x100 + accelerometerData[4]) * 0.488f * 10)/10f;
     }

@@ -29,8 +29,8 @@ public class FragmentDashboardEnviro extends Fragment {
     WebView webViewTemperature;
     WebView webViewHumidity;
     WebView webViewPressure;
-
     WebView webViewAccelerometer;
+    WebView webViewGeneralInfo;
 
 
 
@@ -51,37 +51,41 @@ public class FragmentDashboardEnviro extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_dashboard_enviro, container, false);
-        temperatureText = (TextView) view.findViewById(R.id.weather_ti);
-        humidityText = (TextView) view.findViewById(R.id.humidity_ti);
-        pressureText = (TextView) view.findViewById(R.id.pressure_ti);
-        batteryLevelText = (TextView) view.findViewById(R.id.battery_level_ti);
-        accelerometerTextX = (TextView) view.findViewById(R.id.accelerometer_x_ti);
-        accelerometerTextY = (TextView) view.findViewById(R.id.accelerometer_y_ti);
-        accelerometerTextZ = (TextView) view.findViewById(R.id.accelerometer_z_ti);
-        rssiText = (TextView) view.findViewById(R.id.rssi_enviro);
-        lightText = (TextView) view.findViewById(R.id.light_enviro);
+//        temperatureText = (TextView) view.findViewById(R.id.weather_ti);
+//        humidityText = (TextView) view.findViewById(R.id.humidity_ti);
+//        pressureText = (TextView) view.findViewById(R.id.pressure_ti);
+//        batteryLevelText = (TextView) view.findViewById(R.id.battery_level_ti);
+//        accelerometerTextX = (TextView) view.findViewById(R.id.accelerometer_x_ti);
+//        accelerometerTextY = (TextView) view.findViewById(R.id.accelerometer_y_ti);
+//        accelerometerTextZ = (TextView) view.findViewById(R.id.accelerometer_z_ti);
+//        rssiText = (TextView) view.findViewById(R.id.rssi_enviro);
+//        lightText = (TextView) view.findViewById(R.id.light_enviro);
 
-        batteryLevelText.setText(Integer.toString(batteryLevel) + " %");
+
 
         webViewTemperature = (WebView) view.findViewById(R.id.webviewTemperature);
         webViewHumidity = (WebView) view.findViewById(R.id.webviewHumidity);
         webViewPressure = (WebView) view.findViewById(R.id.webviewPressure);
         webViewAccelerometer = (WebView) view.findViewById(R.id.webviewAccelerometer);
-
+        webViewGeneralInfo = (WebView) view.findViewById(R.id.webview_general_info);
 
         // Enable JavaScript
         webViewTemperature.getSettings().setJavaScriptEnabled(true);
         webViewHumidity.getSettings().setJavaScriptEnabled(true);
         webViewPressure.getSettings().setJavaScriptEnabled(true);
         webViewAccelerometer.getSettings().setJavaScriptEnabled(true);
+        webViewGeneralInfo.getSettings().setJavaScriptEnabled(true);
 
         // Load the html file
         webViewTemperature.loadUrl("file:///android_asset/temperature_widget.html");
         webViewHumidity.loadUrl("file:///android_asset/humidity_widget.html");
         webViewPressure.loadUrl("file:///android_asset/pressure_widget.html");
         webViewAccelerometer.loadUrl("file:///android_asset/accelerometer_widget.html");
+        webViewGeneralInfo.loadUrl("file:///android_asset/general_info_widget.html");
 
-
+        // Display battery level if it was not created when updateData function was called
+        //batteryLevelText.setText(Integer.toString(batteryLevel) + " %");
+        webViewGeneralInfo.loadUrl("javascript:set_battery(" + Integer.toString(batteryLevel) + ")");
 
         return view;
     }
@@ -100,43 +104,55 @@ public class FragmentDashboardEnviro extends Fragment {
         if(webViewAccelerometer != null)
             webViewAccelerometer.loadUrl("javascript:set_accelerometer_data(" + Float.toString(accelerometerX) + ", " + Float.toString(accelerometerY) + ", " + Float.toString(accelerometerZ) + ")");
 
-        if(batteryLevelText != null)
-            batteryLevelText.setText(Integer.toString(batteryLevel) + " %");
+        if(webViewGeneralInfo != null) {
+            webViewGeneralInfo.loadUrl("javascript:set_battery(" + Integer.toString(batteryLevel) + ")");
+            webViewGeneralInfo.loadUrl("javascript:set_rssi(" + Integer.toString(rssi) + ")");
+            webViewGeneralInfo.loadUrl("javascript:set_light(" + light + ")");
+        }
         else
             this.batteryLevel = batteryLevel;
+//        if(batteryLevelText != null) {
+//            batteryLevelText.setText(Integer.toString(batteryLevel) + " %");
+//
+//        }
+//        else
+//            this.batteryLevel = batteryLevel;
 
-        if(rssiText != null)
-        {
-            String text;
-            if(rssi > -65)
-                text = "Near";
-            else if(rssi > -80)
-                text = "Mid range";
-            else
-                text = "Far";
-            rssiText.setText(text);
-        }
+//        if(rssiText != null)
+//        {
+//            String text;
+//            if(rssi > -65)
+//                text = "Near";
+//            else if(rssi > -80)
+//                text = "Mid range";
+//            else
+//                text = "Far";
+//            rssiText.setText(text);
+//
+//        }
+//
+//        if(lightText != null) {
+//            lightText.setText(Integer.toString(light));
+//
+//        }
 
-        if(lightText != null)
-            lightText.setText(Integer.toString(light));
-
-        if(temperatureText != null)
-            temperatureText.setText(Float.toString(temperature)+ " °C");
-
-        if(humidityText != null)
-            humidityText.setText(Float.toString(humidity) + " %");
-
-        if(pressureText != null)
-            pressureText.setText(Float.toString(pressure) + " mBar");
-
-        if(accelerometerTextX != null)
-            accelerometerTextX.setText(Float.toString(accelerometerX) + " mg");
-
-        if(accelerometerTextY != null)
-            accelerometerTextY.setText(Float.toString(accelerometerY) + " mg");
-
-        if(accelerometerTextZ != null)
-            accelerometerTextZ.setText(Float.toString(accelerometerZ) + " mg");
+//        if(temperatureText != null)
+//            temperatureText.setText(Float.toString(temperature)+ " °C");
+//
+//        if(humidityText != null)
+//            humidityText.setText(Float.toString(humidity) + " %");
+//
+//        if(pressureText != null)
+//            pressureText.setText(Float.toString(pressure) + " mBar");
+//
+//        if(accelerometerTextX != null)
+//            accelerometerTextX.setText(Float.toString(accelerometerX) + " mg");
+//
+//        if(accelerometerTextY != null)
+//            accelerometerTextY.setText(Float.toString(accelerometerY) + " mg");
+//
+//        if(accelerometerTextZ != null)
+//            accelerometerTextZ.setText(Float.toString(accelerometerZ) + " mg");
 
 
     }

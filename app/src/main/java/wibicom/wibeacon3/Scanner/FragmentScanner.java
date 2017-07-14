@@ -11,6 +11,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,6 +46,7 @@ public class FragmentScanner extends Fragment {
     private ConnectedDeviceRecyclerViewAdapter connectedDeviceRecyclerViewAdapter;
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
+    private final static String TAG = FragmentScanner.class.getName();
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -81,6 +83,18 @@ public class FragmentScanner extends Fragment {
             pos = deviceList.size() - 1;
             deviceList.remove(pos);
             scannerRecyclerViewAdapter.remove(pos);
+        }
+    }
+
+    public void clearConnectedList()
+    {
+        Log.d(TAG, "entering clearConnectedList()");
+        int pos;
+        while(!connectedDeviceList.isEmpty())
+        {
+            pos = connectedDeviceList.size() - 1;
+            connectedDeviceList.remove(pos);
+            connectedDeviceRecyclerViewAdapter.remove(pos);
         }
     }
 
@@ -121,7 +135,7 @@ public class FragmentScanner extends Fragment {
         scanRecyclerView.setAdapter(adapter);
 
 
-        connectedDeviceRecyclerViewAdapter = new ConnectedDeviceRecyclerViewAdapter(connectedDeviceList);
+        connectedDeviceRecyclerViewAdapter = new ConnectedDeviceRecyclerViewAdapter(connectedDeviceList, mListener);
         connectedDeviceRecyclerView.setAdapter(connectedDeviceRecyclerViewAdapter);
 
 
@@ -141,16 +155,54 @@ public class FragmentScanner extends Fragment {
 
     public void onConnect(BluetoothDevice device, int pos)
     {
-
-        deviceList.remove(pos);
-        scannerRecyclerViewAdapter.remove(pos);
-
-        connectedDeviceList.add(device);
-        connectedDeviceRecyclerViewAdapter.insert(connectedDeviceList.size() - 1);
+        ArrayList<BluetoothDevice> devices = (ArrayList) deviceList;
+        int connectionPos = devices.indexOf(device);
+        if(connectionPos != -1) {
+            deviceList.remove(connectionPos);
+            scannerRecyclerViewAdapter.remove(pos);
+            connectedDeviceList.add(device);
+            connectedDeviceRecyclerViewAdapter.insert(connectedDeviceList.size() - 1);
+            Log.d(TAG, ".onConnect() device " + device.getName() + "was removed from the devielist and added to the connected devices");
+            clearList();
+            mListener.refreshScan();
+        }
+        else {
+            Log.d(TAG, ".onConnect() device " + device.getName() + " was not found in the device list.");
+        }
     }
 
-    public void onDisconnect()
+    public void onSelect(int pos) {
+        for(int i = 0 ; connectedDeviceList.size() > i ; i++) {
+            TextView statusLabel = (TextView) connectedDeviceRecyclerView.getLayoutManager().getChildAt(i).findViewById(R.id.scanner_item_status);
+            statusLabel.setText("CONNECTED");
+        }
+        TextView statusLabel = (TextView) connectedDeviceRecyclerView.getLayoutManager().getChildAt(pos).findViewById(R.id.scanner_item_status);
+        statusLabel.setText("SELECTED");
+    }
+
+    public void onDisconnect(BluetoothDevice device)
     {
+        ArrayList<BluetoothDevice> connectedList = (ArrayList)connectedDeviceList;
+        int listPos = connectedList.indexOf(device);
+        if (listPos != -1) {
+            Log.d(TAG, ".onDisconnect() device " + device.getName() + " was removed from the connectedDeviceList");
+            int selectedIndex = 0;
+            ArrayList<BluetoothDevice> connectedListCopy = new ArrayList<BluetoothDevice>();
+            for(BluetoothDevice thisDevice : connectedDeviceList) {
+                connectedListCopy.add(thisDevice);
+            }
+            clearConnectedList();
+            for(BluetoothDevice thisDevice : connectedListCopy) {
+                if(!device.getName().equals(thisDevice.getName()) && !device.getAddress().equals(thisDevice.getAddress())) {
+                    Log.d(TAG, "adding device " + thisDevice.getName() + " at position " + (connectedDeviceList.size()));
+                    connectedDeviceList.add(thisDevice);
+                    connectedDeviceRecyclerViewAdapter.insert(connectedDeviceList.size());
+                }
+            }
+        }
+        else {
+            Log.d(TAG, ".onDisconnect() device " + device.getName() + " was not found in the list of connected devices.");
+        }
         //scanRecyclerView.getLayoutManager().getChildAt(0).setElevation(4);
         //scanRecyclerView.getLayoutManager().getChildAt(0).findViewById(R.id.button_scan_item).setVisibility(View.INVISIBLE);
         //TextView statusLabel = (TextView) connectedDeviceRecyclerView.getLayoutManager().getChildAt(0).findViewById(R.id.scanner_item_status);
@@ -187,7 +239,10 @@ public class FragmentScanner extends Fragment {
     }
 
     public interface OnListFragmentInteractionListener {
-        void onListFragmentInteraction(BluetoothDevice device, int position);
+        void onListFragmentInteraction(String localName, String adress, int position);
+        //void onConnectedListFragmentInteraction(BluetoothDevice device, int position);
+        void onConnectedListFragmentInteraction(String localName, String adress);
+        void onDisconnectionRequest(String localName, String adress);
         void refreshScan();
     }
 

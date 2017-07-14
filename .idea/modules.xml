@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Wibeacon3.iml" filepath="$PROJECT_DIR$/Wibeacon3.iml" />
+      <module fileurl="file://$PROJECT_DIR$/WibiSmart-Android.iml" filepath="$PROJECT_DIR$/WibiSmart-Android.iml" />
       <module fileurl="file://$PROJECT_DIR$/android-beacon-library-2.8.1/android-beacon-library-2.8.1.iml" filepath="$PROJECT_DIR$/android-beacon-library-2.8.1/android-beacon-library-2.8.1.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/volley_library/volley_library.iml" filepath="$PROJECT_DIR$/volley_library/volley_library.iml" />

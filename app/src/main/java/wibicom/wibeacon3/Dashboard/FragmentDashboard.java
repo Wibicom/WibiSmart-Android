@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,5 +44,18 @@ public class FragmentDashboard extends Fragment {
         isDashboardEnviro = false;
         isDashboardMove = true;
         notConnectedMessage.setVisibility(View.INVISIBLE);
+    }
+
+    public void setDashboardInitial(FragmentDashboardEnviro fragmentDashboardEnviro, FragmentDashboardMove fragmentDashboardMove)
+    {
+        if(isDashboardEnviro) {
+            getChildFragmentManager().beginTransaction().remove(fragmentDashboardEnviro).commit();
+        }
+        else if(isDashboardMove) {
+            getChildFragmentManager().beginTransaction().remove(fragmentDashboardMove).commit();
+        }
+        isDashboardEnviro = false;
+        isDashboardMove = false;
+        notConnectedMessage.setVisibility(View.VISIBLE);
     }
 }

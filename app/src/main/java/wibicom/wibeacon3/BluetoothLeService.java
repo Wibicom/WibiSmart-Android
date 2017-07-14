@@ -16,6 +16,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.util.Pair;
 
 import java.util.ArrayList;
@@ -54,6 +56,11 @@ public class BluetoothLeService extends Service {
     private static final String TI_BAROMETER_CAL_CHAR_UUID = "0000aa42-0000-1000-8000-00805f9b34fb";
     private static final String TI_BAROMETER_PERI_CHAR_UUID = "0000aa42-0000-1000-8000-00805f9b34fb";
 
+    private static final String CO2_SERVICE_UUID = "0000cc30-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_DATA_CHAR_UUID = "0000cc31-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_CONF_CHAR_UUID = "0000cc32-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_PEROÏOD_CHAR_UUID = "0000cc34-0000-1000-8000-00805f9b34fb";
+
     private static final String MODEL_NUMBER_STRING_CHAR_UUID = "00002a24-0000-1000-8000-00805f9b34fb";
     private static final String TI_ACCELEROMETER_DATA_CHAR_UUID = "0000aa81-0000-1000-8000-00805f9b34fb";
 
@@ -61,6 +68,7 @@ public class BluetoothLeService extends Service {
 
 
     public final static String ACTION_GATT_CONNECTED = "ACTION_GATT_CONNECTED";
+    public final static String ACTION_GATT_DONE_CONNECTING = "ACTION_GATT_DONE_CONNECTING";
     public final static String ACTION_GATT_DISCONNECTED = "ACTION_GATT_DISCONNECTED";
     public final static String ACTION_GATT_SERVICES_DISCOVERED = "ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_GATT_NOTIFY = "ACTION_GATT_NOTIFY";
@@ -73,37 +81,13 @@ public class BluetoothLeService extends Service {
     public final static char[] ENVIRO_MODEL_NUMBER_STRING = {'E', 'n', 'v', 'i', 'r', 'o'};
     public final static char[] ENVIRO_MODEL_NUMBER_STRING_TEMP = {'M', 'o', 'd', 'e', 'l', ' ', 'N', 'u', 'm', 'b', 'e', 'r'};
 
-
     boolean isBusyWritting = false;
-
-    // Advertising settings data
-    public int beaconType = 0;
-    public int txPower = 0;
-    public int advertisingIntervals = 0;
-    public int smartPowerMode = 0;
-    public byte[] advertisingPayload;
-
-    // Sensors data (nordic)
-    public int temperatureNordic = 0;
-    public int vSolarNordic = 0;
-
-    // Battery data
-    public int batteryLevel = 0;
-
-    // Weather (TI)
-    public int[] weatherTi = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-    public int weatherConfTi;
-
-    public byte[] accelerometerDatati = {0, 0, 0, 0, 0, 0};
-
-    public char[] modelNumberString = {0};
-
-
 
 
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothGatt mBluetoothGatt;
+    private List<BluetoothGatt> mBluetoothGattList = new ArrayList<BluetoothGatt>();
 
     Queue<Pair<UUID, byte[]>> characteristicToWriteQueue = new LinkedList<>();
     Queue<BluetoothGattService> servicesQueue;
@@ -123,7 +107,7 @@ public class BluetoothLeService extends Service {
         return mBluetoothGatt.getDevice().getName();
     }
 
-
+    private final static String TAG = BluetoothLeService.class.getName();
 
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -150,6 +134,7 @@ public class BluetoothLeService extends Service {
             return BluetoothLeService.this;
         }
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -202,23 +187,34 @@ public class BluetoothLeService extends Service {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             mBluetoothGatt.writeDescriptor(descriptor);
         }
+        else {
+            broadcastUpdate(ACTION_GATT_DONE_CONNECTING);
+        }
     }
 
     public void addToWriteQueue(UUID uuid, byte[] value)
     {
+        Log.d(TAG, "entering addToWriteQueue() for uuid " + uuid.toString() + " and value " + value[0] + ".");
         characteristicToWriteQueue.add(new Pair(uuid, value));
-        if(!isBusyWritting)
+        if(!isBusyWritting) {
+            Log.d(TAG, "addToWriteQueue() not busy writing, calling writeNextCharacteristicInQueue()");
             writeNextCharacteristicInQueue();
+        }
+        else {
+            if(characteristicQueue != null)
+            Log.d(TAG, "addToWriteQueue() was busy writing, current Queue length " + characteristicToWriteQueue.size());
+        }
 
     }
 
     private void writeNextCharacteristicInQueue()
     {
+        Log.d(TAG, "entering writeNextCharacteristicInQueue()");
         if(!characteristicToWriteQueue.isEmpty())
         {
             UUID uuid = characteristicToWriteQueue.peek().first;
             byte[] value = characteristicToWriteQueue.poll().second;
-
+            Log.d(TAG, "writing " + value[0] + " on uuid " + uuid.toString() + " for device " + mBluetoothGatt.getDevice().getName() + ".");
             BluetoothGattCharacteristic characteristic = findCharacteristic(uuid);
             if(characteristic != null)
             {
@@ -245,25 +241,26 @@ public class BluetoothLeService extends Service {
 
     private void writeAdvertisingCharacteristic(BluetoothGattCharacteristic characteristic)
     {
-        if (characteristic.getUuid().toString().equals(ADV_MODE_CHAR_UUID)) {
-            characteristic.setValue(new byte[]{(byte)beaconType});
-            mBluetoothGatt.writeCharacteristic(characteristic);
-        }
-        else if(characteristic.getUuid().toString().equals(ADV_INTERVAL_CHAR_UUID)) {
-            characteristic.setValue(new byte[]{(byte)advertisingIntervals});
-            mBluetoothGatt.writeCharacteristic(characteristic);
-        }
-        else if(characteristic.getUuid().toString().equals(ADV_POWER_CHAR_UUID)) {
-            characteristic.setValue(new byte[]{(byte)txPower});
-            mBluetoothGatt.writeCharacteristic(characteristic);
-        }
-        else if(characteristic.getUuid().toString().equals(ADV_SMART_CHAR_UUID)) {
-            characteristic.setValue(new byte[]{(byte)smartPowerMode});
-            mBluetoothGatt.writeCharacteristic(characteristic);
-        }
-        else if(characteristic.getUuid().toString().equals(ADV_PAYLOAD_CHAR_UUID)) {
-            characteristic.setValue(advertisingPayload);
-            mBluetoothGatt.writeCharacteristic(characteristic);
+        if(MainActivity.getInstance().getSensorDataList().size() > MainActivity.getInstance().getConnectedDevicePosition()) {
+            SensorData sensor = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition());
+            if(sensor != null) {
+                if (characteristic.getUuid().toString().equals(ADV_MODE_CHAR_UUID)) {
+                    characteristic.setValue(new byte[]{(byte) sensor.getBeaconType()});
+                    mBluetoothGatt.writeCharacteristic(characteristic);
+                } else if (characteristic.getUuid().toString().equals(ADV_INTERVAL_CHAR_UUID)) {
+                    characteristic.setValue(new byte[]{(byte) sensor.getAdvertisingIntervals()});
+                    mBluetoothGatt.writeCharacteristic(characteristic);
+                } else if (characteristic.getUuid().toString().equals(ADV_POWER_CHAR_UUID)) {
+                    characteristic.setValue(new byte[]{(byte) sensor.getTxPower()});
+                    mBluetoothGatt.writeCharacteristic(characteristic);
+                } else if (characteristic.getUuid().toString().equals(ADV_SMART_CHAR_UUID)) {
+                    characteristic.setValue(new byte[]{(byte) sensor.getSmartPowerMode()});
+                    mBluetoothGatt.writeCharacteristic(characteristic);
+                } else if (characteristic.getUuid().toString().equals(ADV_PAYLOAD_CHAR_UUID)) {
+                    characteristic.setValue(sensor.getAdvertisingPayload());
+                    mBluetoothGatt.writeCharacteristic(characteristic);
+                }
+            }
         }
     }
 
@@ -275,17 +272,31 @@ public class BluetoothLeService extends Service {
     public void connect(final String address) {
 
         final BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+        MainActivity.getInstance().newConnection(device);
         mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
+        mBluetoothGattList.add(mBluetoothGatt);
     }
 
     public void readRemoteRssi()
     {
-        mBluetoothGatt.readRemoteRssi();
+        for(BluetoothGatt gatt: mBluetoothGattList) {
+            gatt.readRemoteRssi();
+        }
     }
 
 
-    public void disconnect() {
-        mBluetoothGatt.disconnect();
+    public void disconnect(String localName, String adress) {
+        Log.d(TAG, "entering .disconnect() for device " + localName);
+        BluetoothGatt gattToDisConnect = null;
+        for(BluetoothGatt gatt : mBluetoothGattList) {
+            if(gatt.getDevice().getName().equals(localName) && gatt.getDevice().getAddress().equals(adress)) {
+                gattToDisConnect = gatt;
+                Log.d(TAG, ".disconnect() found device to disconnect");
+                break;
+            }
+        }
+        if (gattToDisConnect != null)
+        gattToDisConnect.disconnect();
     }
 
     public void discoverServices()
@@ -303,10 +314,19 @@ public class BluetoothLeService extends Service {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if(newState == BluetoothGatt.STATE_CONNECTED)
             {
-                broadcastUpdate(ACTION_GATT_CONNECTED);
+                if(MainActivity.getInstance().getIsConnectingProcessWith() != null && MainActivity.getInstance().getIsConnectingProcessWith().equals(gatt.getDevice().getAddress())) {
+                    Log.d(TAG, "device " + gatt.getDevice().getName() + "state change to conneted");
+                    broadcastUpdate(ACTION_GATT_CONNECTED);
+                }
+                else {
+                    Log.d(TAG, "device " + gatt.getDevice().getName() + " is not supposed to connect now" );
+                    gatt.disconnect();
+                }
             }
             else
             {
+                Log.d(TAG, "device " + gatt.getDevice().getName() + "state change to DISconneted");
+                MainActivity.getInstance().addDisconnectedDeviceToGattList(gatt);
                 broadcastUpdate(ACTION_GATT_DISCONNECTED);
             }
         }
@@ -315,7 +335,9 @@ public class BluetoothLeService extends Service {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 servicesQueue = new LinkedList<>(mBluetoothGatt.getServices());
+                MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).setConnecteddeviceGatt(gatt);
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+
 
                 if(servicesQueue.size() > 0)
                 {
@@ -325,7 +347,9 @@ public class BluetoothLeService extends Service {
         }
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            Log.d(TAG, "entering .onCharacteristicWrite()");
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.d(TAG, ".onCharacteristicWrite() successfully written characteristic " + characteristic.getUuid().toString() + " for device " + gatt.getDevice().getName() + ".");
                 if(!characteristicQueue.isEmpty()) {
                     writeAdvertisingCharacteristic(characteristicQueue.poll());
                 }
@@ -337,8 +361,9 @@ public class BluetoothLeService extends Service {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.d(TAG, "entering .onCharacteristicRead() for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + " for characteristic " + characteristic.getUuid() + ".");
                 addCharacteristicNotifyQueue(characteristic);
-                updateCharacteristicValue(characteristic);
+                updateCharacteristicValue(gatt, characteristic);
             }
 
             // Read the next characteristic in the queue & broadcast when queue is empty.
@@ -353,6 +378,7 @@ public class BluetoothLeService extends Service {
                 {
                     broadcastUpdate(ACTION_GATT_NOTIFY);
                     writeCharacteristicsDescriptor();
+
                 }
             }
             else
@@ -372,14 +398,26 @@ public class BluetoothLeService extends Service {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            updateCharacteristicValue(characteristic);
-            broadcastUpdate(ACTION_GATT_NOTIFY);
+            Log.d(TAG, "entering .onCharacteristicChanged() for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + " for characteristic " + characteristic.getUuid() + ".");
+            updateCharacteristicValue(gatt, characteristic);
+            if(gatt.getDevice().getAddress().equals(mBluetoothGatt.getDevice().getAddress())) {
+                Log.d(TAG, "onCharacteristicChanged() broatcasting to main, current selected device " + mBluetoothGatt.getDevice().getName());
+                broadcastUpdate(ACTION_GATT_NOTIFY);
+            }
         }
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                SensorData.getInstance().setRssi(rssi);
+                Log.d(TAG, "entering .onReadRemoteRssi() for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + " with rssi " + rssi + ".");
+                MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).setRssi(rssi);
+
+                if(MainActivity.getInstance().getIsTransmittingToCloud() && MqttHandler.getInstance(MainActivity.getInstance()).isConnected()) {
+                    String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'rssi' : '" + rssi + "' }}";
+                    MqttHandler mqttHandler = MqttHandler.getInstance(null);
+                    Log.d(TAG, "publishing rssi for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
+                    mqttHandler.publish(mqttHandler.getTopicRssi(), message);
+                }
             }
         }
 
@@ -393,85 +431,100 @@ public class BluetoothLeService extends Service {
                 || characteristic.getUuid().toString().equals(TI_BAROMETER_DATA_CHAR_UUID)
                 || characteristic.getUuid().toString().equals(TI_ACCELEROMETER_DATA_CHAR_UUID)
                 || characteristic.getUuid().toString().equals(NORDIC_SENSOR_ACCELEROMETER_DATA_UUID)
-                || characteristic.getUuid().equals(WibiSmartGatt.getInstance().LIGHT_DATA_CHAR_UUID_ENVIRO))
+                || characteristic.getUuid().equals(WibiSmartGatt.getInstance().LIGHT_DATA_CHAR_UUID_ENVIRO)
+                || characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_DATA_CHAR_UUID_ENVIRO))
         {
             characteristicSetNotifyQueue.add(characteristic);
         }
 
     }
 
-    private void updateCharacteristicValue(BluetoothGattCharacteristic characteristic)
+    private void updateCharacteristicValue(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
     {
-        byte byteArray[] = characteristic.getValue();
+        SensorData thisSensorData = MainActivity.getInstance().getSensorDataWithAdress(gatt.getDevice().getAddress(), gatt.getDevice().getName());
+        if(thisSensorData == null) {
+            gatt.disconnect();
+            Log.d(TAG, ".updateCharacteristicValue() device " + gatt.getDevice().getName() + " is not supposed to be connected. Disconnecting...");
+        }
+        else {
+            boolean transmitToCloud = MainActivity.getInstance().getIsTransmittingToCloud();
+            Log.d(TAG, "entering updateCharacteristicValue() for characteristic " + characteristic.getUuid().toString() + " for device " + thisSensorData.getLocalName() + ", isTransmitingToCloud: " + transmitToCloud + ".");
+            byte byteArray[] = characteristic.getValue();
+            // Set the right characteristic
+            if (characteristic.getUuid().toString().equals(ADV_MODE_CHAR_UUID)) {
+                thisSensorData.setBeaconType(((int) byteArray[0]));
+            } else if (characteristic.getUuid().toString().equals(ADV_INTERVAL_CHAR_UUID)) {
+                thisSensorData.setAdvertisingIntervals(((int) byteArray[0]));
+            } else if (characteristic.getUuid().toString().equals(ADV_POWER_CHAR_UUID)) {
+                thisSensorData.setTxPower(((int) byteArray[0]));
+            } else if (characteristic.getUuid().toString().equals(ADV_SMART_CHAR_UUID)) {
+                thisSensorData.setSmartPowerMode(((int) byteArray[0]));
+            } else if (characteristic.getUuid().toString().equals(NORDIC_SENSOR_TEMPERATURE_DATA_UUID)) {
+                thisSensorData.setTemperatureNordic(((int) byteArray[0]));
+            } else if (characteristic.getUuid().toString().equals(NORDIC_SENSOR_VSOLAR_DATA_UUID)) {
+                thisSensorData.setVSolarNordic(byteArray[0] & 0xFF);
+            } else if (characteristic.getUuid().toString().equals(BATTERY_LEVEL_CHAR_UUID)) {
+                int batteryLevel = (byteArray[0] & 0xFF);
+                thisSensorData.setBatteryLevel(batteryLevel);
+                if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected()) {
+                    String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'batteryLevel' : '" + batteryLevel + "' }}";
+                    Log.d(TAG, "publishing battery for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
+                    MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicBattery(), message);
+                }
 
-        // Set the right characteristic
-        if (characteristic.getUuid().toString().equals(ADV_MODE_CHAR_UUID))
-        {
-            beaconType = ((int)byteArray[0]);
-        }
-        else if(characteristic.getUuid().toString().equals(ADV_INTERVAL_CHAR_UUID))
-        {
-            advertisingIntervals = ((int)byteArray[0]);
-        }
-        else if(characteristic.getUuid().toString().equals(ADV_POWER_CHAR_UUID))
-        {
-            txPower = ((int)byteArray[0]);
-        }
-        else if(characteristic.getUuid().toString().equals(ADV_SMART_CHAR_UUID))
-        {
-            smartPowerMode = ((int)byteArray[0]);
-        }
-        else if(characteristic.getUuid().toString().equals(NORDIC_SENSOR_TEMPERATURE_DATA_UUID))
-        {
-            temperatureNordic = ((int)byteArray[0]);
-        }
-        else if(characteristic.getUuid().toString().equals(NORDIC_SENSOR_VSOLAR_DATA_UUID))
-        {
-            vSolarNordic = byteArray[0] & 0xFF;
-        }
-        else if(characteristic.getUuid().toString().equals(BATTERY_LEVEL_CHAR_UUID))
-        {
-            batteryLevel = (byteArray[0] & 0xFF);
-        }
-        else if(characteristic.getUuid().toString().equals(TI_BAROMETER_DATA_CHAR_UUID))
-        {
-            for(int i = 0; i < byteArray.length; i++)
-            {
-                weatherTi[i] = byteArray[i] & 0xFF;
+            } else if (characteristic.getUuid().toString().equals(TI_BAROMETER_DATA_CHAR_UUID)) {
+                int[] weatherTi = new int[9];
+                for (int i = 0; i < byteArray.length; i++) {
+                    weatherTi[i] = byteArray[i] & 0xFF;
+                }
+                thisSensorData.setWeatherEnviro(weatherTi);
+                float[] weather = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).parseWeatherEnviro(weatherTi);
+                if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (weather[0] != 0 || weather[1] != 0 || weather[2] != 0)) {
+                    String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'temperature' : '" + weather[0] + "', 'pressure' : '" + weather[1] + "', 'humidity' : '" + weather[2] + "' }}";
+                    Log.d(TAG, "publishing weather for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
+                    MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicAir(), message);
+                }
             }
-        }
-        else if(characteristic.getUuid().toString().equals(TI_BAROMETER_CONF_CHAR_UUID))
+        /*else if(characteristic.getUuid().toString().equals(TI_BAROMETER_CONF_CHAR_UUID))
         {
             weatherConfTi = ((int)byteArray[0]);
-        }
-        else if(characteristic.getUuid().toString().equals(MODEL_NUMBER_STRING_CHAR_UUID))
-        {
-            if(modelNumberString.length != byteArray.length)
-                modelNumberString = new char[byteArray.length];
-            for(int i = 0; i < byteArray.length; i++)
-            {
-                modelNumberString[i] = (char)(byteArray[i] & 0xFF);
-            }
-        }
-        else if(characteristic.getUuid().toString().equals(TI_ACCELEROMETER_DATA_CHAR_UUID))
-        {
-            for(int i = 0; i < byteArray.length; i++)
-            {
-                accelerometerDatati[i] = byteArray[i];
-            }
-        }
-        else if(characteristic.getUuid().equals(WibiSmartGatt.getInstance().LIGHT_DATA_CHAR_UUID_ENVIRO))
-        {
-            SensorData.getInstance().setLightLevel(byteArray);
-        }
-        else if(characteristic.getUuid().toString().equals(NORDIC_SENSOR_ACCELEROMETER_DATA_UUID))
-        {
-            SensorData.getInstance().setAccelerometer(byteArray);
-        }
+        }*/
+            else if (characteristic.getUuid().toString().equals(MODEL_NUMBER_STRING_CHAR_UUID)) {
+                char[] modelNumberString = thisSensorData.getModelNumberString();
+                if (modelNumberString.length != byteArray.length)
+                    modelNumberString = new char[byteArray.length];
+                for (int i = 0; i < byteArray.length; i++) {
+                    modelNumberString[i] = (char) (byteArray[i] & 0xFF);
+                }
+                thisSensorData.setModelNumberString(modelNumberString);
+            } else if (characteristic.getUuid().toString().equals(TI_ACCELEROMETER_DATA_CHAR_UUID)) {
+                byte[] accelerometerDatati = new byte[6];
+                for (int i = 0; i < byteArray.length; i++) {
+                    accelerometerDatati[i] = byteArray[i];
+                }
+                thisSensorData.setAccelerometer(accelerometerDatati);
+                float[] accelerometerData = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).parseAccelerometer(accelerometerDatati);
+                if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (accelerometerData[0] != 0 || accelerometerData[1] != 0 || accelerometerData[2] != 0)) {
+                    String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'x' : '" + accelerometerData[0] + "', 'y' : '" + accelerometerData[1] + "', 'z' : '" + accelerometerData[2] + "' }}";
+                    Log.d(TAG, "publishing accel for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
+                    MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicAccel(), message);
+                }
+            } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().LIGHT_DATA_CHAR_UUID_ENVIRO)) {
+                thisSensorData.setLightLevel(byteArray);
 
-        else
-        {
-            updateSettingsValue(characteristic);
+                int lightLevel = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).parseLightLevel(byteArray);
+                if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && lightLevel != 0) {
+                    String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'light' : '" + lightLevel + "' }}";
+                    Log.d(TAG, "publishing light for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
+                    MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicHealth(), message);
+                }
+            } else if (characteristic.getUuid().toString().equals(NORDIC_SENSOR_ACCELEROMETER_DATA_UUID)) {
+                thisSensorData.setAccelerometer(byteArray);
+            } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_DATA_CHAR_UUID_ENVIRO)) {
+                thisSensorData.setCO2Enviro(byteArray);
+            } else {
+                updateSettingsValue(characteristic);
+            }
         }
 
     }
@@ -516,8 +569,59 @@ public class BluetoothLeService extends Service {
 //            editor.putString("light_period_enviro", Integer.toString(period));
 //            editor.apply();
         }
+        else if(characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO))
+        {
+            editor.putBoolean("CO2_checkbox_enviro", (int)byteArray[0] == 1);
+            editor.apply();
+        }
+        else if(characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_PEROÏOD_CHAR_UUID_ENVIRO))
+        {
+//            int period = ((char)(byteArray[0] & 0xFF));
+//            editor.putString("CO2_period_enviro", Integer.toString(period));
+//            editor.apply();
+        }
 
 
+    }
+
+    public void clearWritingQueue() {
+        Log.d(TAG, "entering .clearWritingQueue()");
+        int counter = 0;
+        if(characteristicToWriteQueue != null) {
+            while (!characteristicToWriteQueue.isEmpty()) {
+                characteristicToWriteQueue.remove();
+                counter++;
+            }
+        }
+        if (characteristicQueue != null) {
+            while (!characteristicQueue.isEmpty()) {
+                characteristicQueue.remove();
+            }
+        }
+        if(servicesQueue != null) {
+            while (!servicesQueue.isEmpty()) {
+                servicesQueue.remove();
+            }
+        }
+        if (characteristicSetNotifyQueue != null) {
+            while (!characteristicSetNotifyQueue.isEmpty()) {
+                characteristicSetNotifyQueue.remove();
+            }
+        }
+        isBusyWritting = false;
+        Log.d(TAG, ".clearWritingQueue() cleared " + counter + " writes.");
+    }
+
+    public void deleteGattAtPosition(int pos) {
+        mBluetoothGattList.remove(pos);
+    }
+
+    public void setSelectedGatt(int position) {
+        Log.d(TAG, "entering setSelectedGatt()");
+        if(mBluetoothGattList != null && position < mBluetoothGattList.size()) {
+            Log.d(TAG, "setSelectedGatt() at position "+ position + ", list size = "+ mBluetoothGattList.size());
+            mBluetoothGatt = mBluetoothGattList.get(position);
+        }
     }
 
 

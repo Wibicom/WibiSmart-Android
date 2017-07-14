@@ -4,6 +4,7 @@ package wibicom.wibeacon3;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -20,6 +21,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -51,6 +53,7 @@ import java.util.Queue;
 import java.util.UUID;
 
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -67,6 +70,10 @@ import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 //import org.altbeacon.beacon.*;
+import org.altbeacon.bluetooth.BleAdvertisement;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -88,6 +95,9 @@ import wibicom.wibeacon3.Settings.FragmentSettingsMove;
  */
 @TargetApi(21)
 public class MainActivity extends AppCompatActivity implements /*BeaconConsumer, RangeNotifier,*/ FragmentScanner.OnListFragmentInteractionListener, FragmentPushToCloud.OnPushToCloudInteractionListener, FragmentSettingsEnviro.OnSettingsEnviroListener, FragmentSettingsMove.OnSettingsMoveListener {//, FragmentDashboardMove.OnFragmentInteractionListener {
+
+    private static MainActivity ourInstance;
+
     //private BeaconManager beaconManager;
     private DrawerLayout mDrawerLayout;
     //Collection<Beacon> beaconsInRange;
@@ -103,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
 
     private boolean isScanStarted = false;
     private boolean isConnected = false;
+    private String isConnectingProcessWith = null;
 
     FragmentScanner fragmentScanner;
     FragmentDashboard fragmentDashboard;
@@ -114,19 +125,37 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
     FragmentSettingsEnviro fragmentSettingsEnviro;
 
     BluetoothDevice connectedDevice;
+
+    List<BluetoothGatt> disconnectedDevicesGattList = new ArrayList<BluetoothGatt>();
+
+    List<BluetoothDevice> connectedDevices = new ArrayList<>();
+
+    List<SensorData> sensorDataList = new ArrayList<>();
+
     int connectedDevicePosition;
+    int attemptConnectionPosition;
     boolean isTransmittingToCloud;
 
     Adapter viewPagerAdapter;
     ViewPager viewPager;
 
-    private RequestQueue mRequestQueue;
 
     private GoogleApiClient client;
+
+    private MqttHandler mMqttHandler;
+
+    private final static String TAG = MainActivity.class.getName();
+
+    public static final MainActivity getInstance() {
+        return ourInstance;
+    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ourInstance = this;
         setContentView(R.layout.activity_ranging );
 
         setupUi();
@@ -143,6 +172,21 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+
+        mMqttHandler = mMqttHandler.getInstance(this);
+        /*Log.d(TAG, "MQTT connecting...");
+        mMqttHandler.connect(new IMqttActionListener() {
+            @Override
+            public void onSuccess(IMqttToken asyncActionToken) {
+                Log.d(TAG, "MQTT connected");
+            }
+
+            @Override
+            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                Log.d(TAG, "MQTT connection failure");
+                exception.printStackTrace();
+            }
+        });*/
     }
 
 
@@ -307,7 +351,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         }
     }
 
-    private void pushToCloud() {
+    /*private void pushToCloud() {
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected())
@@ -316,17 +360,18 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
             // Post params to be sent to the server
             HashMap<String, String> params = new HashMap<>();
 
-            params.put("temperature", Float.toString(SensorData.getInstance().getTemperatureEnviro()));
-            params.put("light", Integer.toString(SensorData.getInstance().getLightLevel()));
+            SensorData sensor = sensorDataList.get(connectedDevicePosition);
+            params.put("temperature", Float.toString(sensor.getTemperatureEnviro()));
+            params.put("light", Integer.toString(sensor.getLightLevel()));
             params.put("battery", Integer.toString(mBluetoothLeService.batteryLevel));//SensorData.getInstance().getBatteryLevel()));
             params.put("deviceNb", mBluetoothLeService.getBluetoothAdress());
             params.put("datetime", DateFormat.getDateTimeInstance().format(new Date()));
 
-            params.put("humidity", Float.toString(SensorData.getInstance().getHumidityEnviro()));
-            params.put("pressure", Float.toString(SensorData.getInstance().getPressureEnviro()));
-            params.put("accx", Float.toString(SensorData.getInstance().getAccelerometerX()));
-            params.put("accy", Float.toString(SensorData.getInstance().getAccelerometerY()));
-            params.put("accz", Float.toString(SensorData.getInstance().getAccelerometerZ()));
+            params.put("humidity", Float.toString(sensor.getHumidityEnviro()));
+            params.put("pressure", Float.toString(sensor.getPressureEnviro()));
+            params.put("accx", Float.toString(sensor.getAccelerometerX()));
+            params.put("accy", Float.toString(sensor.getAccelerometerY()));
+            params.put("accz", Float.toString(sensor.getAccelerometerZ()));
 
             //params.put("deviceType", String.valueOf(mBluetoothLeService.modelNumberString));
             params.put("deviceType", "ENVIRO");
@@ -373,16 +418,8 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
             Snackbar.make(findViewById(android.R.id.content), "Oups, network is not connected", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
         }
-    }
+    }*/
 
-    public void disconnectDevice(View view) {
-        disconnect();
-    }
-
-    public void disconnect() {
-        mBluetoothLeService.disconnect();
-        fragmentScanner.onDisconnect();
-    }
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
@@ -391,60 +428,104 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
             final String action = intent.getAction();
 
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-
                 mBluetoothLeService.discoverServices();
                 isConnected = true;
                 Snackbar.make(findViewById(android.R.id.content), "Connected!", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                fragmentScanner.onConnect(connectedDevice, connectedDevicePosition);
-                connectedDevicePosition = 0;
+                fragmentScanner.onConnect(connectedDevice, attemptConnectionPosition);
+                attemptConnectionPosition = 0;
+
+
 
             }
             else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                isConnected = false;
-                Snackbar.make(findViewById(android.R.id.content), "Disconnected", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                fragmentScanner.onDisconnect();
+                if(disconnectedDevicesGattList.size()  > 0) {
+                    BluetoothGatt thisDisconnectionGatt = disconnectedDevicesGattList.remove(0);
+                    if(thisDisconnectionGatt.getDevice().getAddress().equals(isConnectingProcessWith)) {
+                        isConnectingProcessWith = null;
+                    }
+                    Log.d(TAG, "device " + thisDisconnectionGatt.getDevice().getName() + " has been notified as disconnected.");
+                    isConnected = false;
+                    Snackbar.make(findViewById(android.R.id.content), thisDisconnectionGatt.getDevice().getName() + " Disconnected", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                    ArrayList<BluetoothDevice> connectedList = (ArrayList)connectedDevices;
+                    int position = connectedList.indexOf(thisDisconnectionGatt.getDevice());
+                    if(position != -1) {
+                        connectedDevices.remove(position);
+                        sensorDataList.remove(position);
+                        mBluetoothLeService.deleteGattAtPosition(position);
+                        mBluetoothLeService.clearWritingQueue();
+                        fragmentScanner.onDisconnect(thisDisconnectionGatt.getDevice());
+
+                        if (connectedList.size() > 0) {
+                            int newPos = connectedList.indexOf(connectedDevice);
+                            if (connectedDevicePosition == position) {
+                                connectedDevicePosition = 0;
+                                connectedDevice = connectedDevices.get(0);
+                                mBluetoothLeService.setSelectedGatt(0);
+                                fragmentScanner.onSelect(0);
+                                updateDashboard();
+                            } else if (newPos != -1) {
+                                connectedDevicePosition = newPos;
+                                connectedDevice = connectedDevices.get(newPos);
+                                mBluetoothLeService.setSelectedGatt(newPos);
+                                fragmentScanner.onSelect(newPos);
+                                updateDashboard();
+                            }
+                        }
+                        else {
+                            fragmentDashboard.setDashboardInitial(fragmentDashboardEnviro, fragmentDashboardMove);
+                            fragmentSettings.setSettingsInitial(fragmentSettingsMove, fragmentSettingsEnviro);
+                        }
+                    }
+                }
             }
             else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 Snackbar.make(findViewById(android.R.id.content), "Services discovered", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                fragmentDashboardEnviro.hideSensors();
+                fragmentSettingsEnviro.syncSettings();
             }
             else if(BluetoothLeService.ACTION_GATT_NOTIFY.equals(action)) {
                 updateDashboard();
-                if(isTransmittingToCloud)
-                    pushToCloud();
             }
-//            else if(BluetoothLeService.ACTION_GATT_READ.equals(action))
-//            {
-//                updateSettings();
-//            }
+            else if(BluetoothLeService.ACTION_GATT_DONE_CONNECTING.equals(action))
+            {
+                fragmentDashboardEnviro.hideSensors();
+                fragmentSettingsEnviro.syncSettings();
+                isConnectingProcessWith = null;
+                Snackbar.make(findViewById(android.R.id.content), mBluetoothLeService.getDeviceName() + " ready to be used.", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
         }
     };
 
     private void updateDashboard()
     {
-        if(isCharArrayEquals(mBluetoothLeService.modelNumberString, mBluetoothLeService.MOVE_MODEL_NUMBER_STRING))
-        {
-            setMoveUi();
-            SensorData sensor = SensorData.getInstance();
-            sensor.setBatteryLevel(mBluetoothLeService.batteryLevel);
-            //SensorData.getInstance().setLightLevel(mBluetoothLeService.vSolarNordic);
-            fragmentDashboardMove.updateData(mBluetoothLeService.temperatureNordic, mBluetoothLeService.vSolarNordic, mBluetoothLeService.batteryLevel,
-                sensor.getAccelerometerX(), sensor.getAccelerometerY(), sensor.getAccelerometerZ());
+        Log.d(TAG, "entering .updateDasboard()");
+        if(sensorDataList.size() > connectedDevicePosition) {
+            SensorData sensor = sensorDataList.get(connectedDevicePosition);
+            if (sensor != null) {
+                char[] modelNumberString = sensor.getModelNumberString();
+                if (isCharArrayEquals(modelNumberString, mBluetoothLeService.MOVE_MODEL_NUMBER_STRING)) {
+                    Log.d(TAG, ".updateDashboard() device " + sensor.getLocalName() + " calling setMoveUi()");
+                    setMoveUi();
 
-        }
-        else if(isCharArrayEquals(mBluetoothLeService.modelNumberString, mBluetoothLeService.ENVIRO_MODEL_NUMBER_STRING) || isCharArrayEquals(mBluetoothLeService.modelNumberString, mBluetoothLeService.ENVIRO_MODEL_NUMBER_STRING_TEMP))
-        {
-            mBluetoothLeService.readRemoteRssi();
-            setEnviroUi();
-            SensorData sensor = SensorData.getInstance();
-            sensor.setWeatherEnviro(mBluetoothLeService.weatherTi);
-            sensor.setAccelerometer(mBluetoothLeService.accelerometerDatati);
-            sensor.setBatteryLevel(mBluetoothLeService.batteryLevel);
-            fragmentDashboardEnviro.updateData(sensor.getTemperatureEnviro(), sensor.getPressureEnviro(), sensor.getHumidityEnviro(),
-                    sensor.getAccelerometerX(), sensor.getAccelerometerY(), sensor.getAccelerometerZ(),
-                    sensor.getBatteryLevel(), sensor.getRssi(), sensor.getLightEnviro());
+                    fragmentDashboardMove.updateData(sensor.getTemperatureNordic(), sensor.getvSolarNordic(), sensor.getBatteryLevel(),
+                            sensor.getAccelerometerX(), sensor.getAccelerometerY(), sensor.getAccelerometerZ());
+
+                } else if (isCharArrayEquals(modelNumberString, mBluetoothLeService.ENVIRO_MODEL_NUMBER_STRING) || isCharArrayEquals(modelNumberString, mBluetoothLeService.ENVIRO_MODEL_NUMBER_STRING_TEMP)) {
+                    Log.d(TAG, ".updateDashboard() device " + sensor.getLocalName() + " calling setEnviroUi()");
+                    mBluetoothLeService.readRemoteRssi();
+                    setEnviroUi();
+
+                    fragmentDashboardEnviro.updateData(sensor.getLocalName(), sensor.getTemperatureEnviro(), sensor.getPressureEnviro(), sensor.getHumidityEnviro(),
+                            sensor.getAccelerometerX(), sensor.getAccelerometerY(), sensor.getAccelerometerZ(),
+                            sensor.getBatteryLevel(), sensor.getRssi(), sensor.getLightEnviro(), sensor.getCO2Enviro());
+                }
+            } else {
+                Log.d(TAG, ".updateDashboard() sensorData was not found.");
+            }
         }
     }
 
@@ -474,6 +555,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_NOTIFY);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_READ);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DONE_CONNECTING);
         return intentFilter;
     }
 
@@ -642,26 +724,78 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
 //    }
 
     @Override
-    public void onListFragmentInteraction(BluetoothDevice device, int position) {
+    public void onListFragmentInteraction(String localName, String adress, int position) {
+        Log.d(TAG, "entering .onListFragmentIteraction()");
         //BluetoothDevice bluetoothDevice = deviceList.get(pos);
         // if(!isConnected)
         // {
-        Snackbar.make(findViewById(android.R.id.content), "Connecting to " + device.getName() + "...", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show();
+        if(isConnectingProcessWith == null) {
+            Snackbar.make(findViewById(android.R.id.content), "Connecting to " + localName + "...", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+            Log.d(TAG, "entering .onListFragmentIneraction() connecting to " + localName);
+            mBluetoothLeScanner.stopScan(leScanCallback);
+            mBluetoothLeService.connect(adress);
+            isConnectingProcessWith = adress;
+            attemptConnectionPosition = position;
+            //}
+        }
+        else {
+            Snackbar.make(findViewById(android.R.id.content), "Wait till all your devices are ready to be used.", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+            Log.d(TAG, ".onListFragmentIteraction() was not ready");
+        }
 
-        mBluetoothLeScanner.stopScan(leScanCallback);
-        mBluetoothLeService.connect(device.getAddress());
+    }
 
-        connectedDevice = device;
+    /*@Override
+    public void onConnectedListFragmentInteraction(BluetoothDevice device, int position) {
+        Log.d(TAG, "entering onConnectedListFragmentIteraction() for device " + device.getName() + " at position "+ position + ".");
         connectedDevicePosition = position;
-        //}
+        connectedDevice = connectedDevices.get(position);
+        mBluetoothLeService.setSelectedGatt(position);
+        fragmentScanner.onSelect(position);
+        Snackbar.make(findViewById(android.R.id.content), "You have now selected " + device.getName() + "!", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+    }*/
 
+    @Override
+    public void onConnectedListFragmentInteraction(String localName, String adress) {
+        Log.d(TAG, "entering onConnectedListFragmentIteraction() for device " + localName + " with adress " + adress);
+        if (isConnectingProcessWith == null) {
+            int position = 0;
+            for (BluetoothDevice thisDevice : connectedDevices) {
+                if (thisDevice.getAddress().equals(adress) && thisDevice.getName().equals(localName)) {
+                    position = connectedDevices.indexOf(thisDevice);
+                    break;
+                }
+            }
+            connectedDevicePosition = position;
+            connectedDevice = connectedDevices.get(position);
+            mBluetoothLeService.setSelectedGatt(position);
+            fragmentScanner.onSelect(position);
+            Snackbar.make(findViewById(android.R.id.content), "You have now selected " + localName + "!", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+            fragmentDashboardEnviro.hideSensors();
+            fragmentSettingsEnviro.syncSettings();
+            updateDashboard();
+        }
+        else {
+            Snackbar.make(findViewById(android.R.id.content), "Wait till all your devices are ready to be used.", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
+            Log.d(TAG, ".onConnectedListFragmentIteraction() was not ready");
+        }
+    }
 
+    @Override
+    public void onDisconnectionRequest(String localName, String adress) {
+        Log.d(TAG, "entering onDisconnectionRequest() for device " + localName);
+        mBluetoothLeService.disconnect(localName, adress);
     }
 
     @Override
     public void writeCharacteristic(UUID uuid, byte[] value)
     {
+        Log.d(TAG, "entering writeCharacteristic() for uuid " + uuid.toString() + " and value " + value[0] + ".");
         mBluetoothLeService.addToWriteQueue(uuid, value);
     }
 
@@ -783,6 +917,62 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
 
 
 
+    }
+
+    public void newConnection(BluetoothDevice device) {
+        Log.d(TAG, "entering newConnection() for device " + device.getName());
+        connectedDevicePosition = connectedDevices.size();
+        connectedDevice = device;
+        connectedDevices.add(connectedDevicePosition, device);
+        sensorDataList.add(connectedDevicePosition, new SensorData(device.getName(), device.getAddress()));
+    }
+
+    public SensorData getSensorDataWithAdress(String adress, String localName) {
+        for(SensorData sensorDataInstance : sensorDataList) {
+            if(sensorDataInstance.getLocalName().equals(localName) && sensorDataInstance.getAdress().equals(adress)) {
+                return sensorDataInstance;
+            }
+        }
+        return null;
+    }
+
+    public void connectIot() {
+        Log.d(TAG, "entering .connectIoT()");
+        Log.d(TAG, "MQTT connecting...");
+        mMqttHandler.connect(new IMqttActionListener() {
+            @Override
+            public void onSuccess(IMqttToken asyncActionToken) {
+                Log.d(TAG, "MQTT connected");
+                Snackbar.make(findViewById(android.R.id.content), "Connected to Watson IoT!", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+
+            @Override
+            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                Log.d(TAG, "MQTT connection failure");
+                exception.printStackTrace();
+                Snackbar.make(findViewById(android.R.id.content), "Connection to Watson IoT failed...", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
+    }
+
+    public List<SensorData> getSensorDataList() {
+        return sensorDataList;
+    }
+
+    public int getConnectedDevicePosition() {
+        return connectedDevicePosition;
+    }
+
+    public boolean getIsTransmittingToCloud() {
+        return isTransmittingToCloud;
+    }
+
+    public String getIsConnectingProcessWith() { return isConnectingProcessWith; }
+
+    public void addDisconnectedDeviceToGattList(BluetoothGatt gatt) {
+        disconnectedDevicesGattList.add(gatt);
     }
 
 

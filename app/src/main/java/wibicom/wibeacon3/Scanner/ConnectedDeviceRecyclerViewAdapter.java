@@ -1,11 +1,16 @@
 package wibicom.wibeacon3.Scanner;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.v7.widget.ListPopupWindow;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
+import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.util.List;
@@ -18,21 +23,25 @@ import wibicom.wibeacon3.R;
 public class ConnectedDeviceRecyclerViewAdapter extends RecyclerView.Adapter<ConnectedDeviceRecyclerViewAdapter.ViewHolder> {
 
     private final List<BluetoothDevice> mValues;
+    private final FragmentScanner.OnListFragmentInteractionListener mListener;
 
-    public ConnectedDeviceRecyclerViewAdapter(List<BluetoothDevice> mValues) {
+    private final static String TAG = ConnectedDeviceRecyclerViewAdapter.class.getName();
+
+    public ConnectedDeviceRecyclerViewAdapter(List<BluetoothDevice> mValues, FragmentScanner.OnListFragmentInteractionListener listener) {
         this.mValues = mValues;
+        this.mListener = listener;
     }
 
     @Override
     public ConnectedDeviceRecyclerViewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_scanner_item, parent, false);
+                .inflate(R.layout.fragment_connected_scanner_item, parent, false);
 
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(ConnectedDeviceRecyclerViewAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(final ConnectedDeviceRecyclerViewAdapter.ViewHolder holder, final int position) {
         holder.mItem = mValues.get(position);
         holder.mContentView.setText(mValues.get(position).getAddress());
 
@@ -41,6 +50,42 @@ public class ConnectedDeviceRecyclerViewAdapter extends RecyclerView.Adapter<Con
         else
             holder.mTitleView.setText("N/A");
         holder.mStatus.setText("CONNECTED");
+        Log.d(TAG, ".onBindViewHolder() for device " + mValues.get(position).getName() + " at position " + position);
+
+        holder.mView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (null != mListener) {
+                    // Notify the active callbacks interface (the activity, if the
+                    // fragment is attached to one) that an item has been selected.
+//                    if(v.findViewById(R.id.button_scan_item).getVisibility() != View.VISIBLE) {
+//
+//
+//                        holder.mView.setElevation(20f);
+//                    }
+
+                    //mListener.onConnectedListFragmentInteraction(mValues.get(position), position);
+                    mListener.onConnectedListFragmentInteraction(holder.mTitleView.getText().toString(), holder.mContentView.getText().toString());
+
+                    //holder.mButton.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
+        holder.mButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListener.onDisconnectionRequest(holder.mTitleView.getText().toString(), holder.mContentView.getText().toString());
+            }
+        });
+
+        /*holder.mView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                mListener.onDisconnectionRequest(holder.mTitleView.getText().toString(), holder.mContentView.getText().toString());
+            return  true;
+            }
+        });*/
     }
 
     @Override
@@ -68,7 +113,7 @@ public class ConnectedDeviceRecyclerViewAdapter extends RecyclerView.Adapter<Con
         public final TextView mTitleView;
         public final TextView mContentView;
         public final TextView mStatus;
-        //public final Button mButton;
+        public final ImageButton mButton;
         public BluetoothDevice mItem;
 
 
@@ -77,10 +122,12 @@ public class ConnectedDeviceRecyclerViewAdapter extends RecyclerView.Adapter<Con
             mView = view;
             mTitleView = (TextView) view.findViewById(R.id.title);
             mContentView = (TextView) view.findViewById(R.id.content);
-            //mButton = (Button) view.findViewById(R.id.button_scan_item);
+            mButton = (ImageButton) view.findViewById(R.id.overflow_menu_button);
             mStatus = (TextView) view.findViewById(R.id.scanner_item_status);
             //mButton.setVisibility(View.INVISIBLE);
         }
+
+
 
         @Override
         public String toString() {

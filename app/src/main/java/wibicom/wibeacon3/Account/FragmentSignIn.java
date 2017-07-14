@@ -134,7 +134,9 @@ public class FragmentSignIn extends Fragment {
 
     private void displayMessage(String message)
     {
-        Snackbar.make(getActivity().findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).setAction("Action", null).show();
+        if(getActivity() != null) {
+            Snackbar.make(getActivity().findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).setAction("Action", null).show();
+        }
     }
 
 

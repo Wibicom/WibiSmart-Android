@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.preference.DialogPreference;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,6 +62,8 @@ public class SliderDialog extends DialogPreference {
         SeekBar seekbar = (SeekBar) view.findViewById(R.id.seek_bar);
         seekbar.setMax(150);
         seekbar.setProgress(mSeekBarValue);
+
+
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override
@@ -76,7 +79,6 @@ public class SliderDialog extends DialogPreference {
                 if (fromUser) {
                     SliderDialog.this.mSeekBarValue = progress;
                     updateTextValue();
-
                 }
             }
         });
@@ -101,12 +103,18 @@ public class SliderDialog extends DialogPreference {
         else {
             text = Float.toString((float) mSeekBarValue * 100) + " milliseconds";
         }
+        if(SliderDialog.this.mTextValue != null)
         SliderDialog.this.mTextValue.setText(text);
     }
 
     public Integer getSliderValue()
     {
         return mSeekBarValue;
+    }
+
+    public void setSliderValue(int val) {
+        mSeekBarValue = new Integer(val);
+        updateTextValue();
     }
 
 //    @Override

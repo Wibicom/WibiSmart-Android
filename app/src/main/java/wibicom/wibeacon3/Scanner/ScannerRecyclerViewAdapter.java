@@ -3,6 +3,7 @@ package wibicom.wibeacon3.Scanner;
 import android.bluetooth.BluetoothDevice;
 import android.support.v7.widget.ListPopupWindow;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +23,7 @@ public class ScannerRecyclerViewAdapter extends RecyclerView.Adapter<ScannerRecy
 
     private final List<BluetoothDevice> mValues;
     private final FragmentScanner.OnListFragmentInteractionListener mListener;
-
+    private final static String TAG = ScannerRecyclerViewAdapter.class.getName();
 
     public ScannerRecyclerViewAdapter(List<BluetoothDevice> items, FragmentScanner.OnListFragmentInteractionListener listener) {
         mValues = items;
@@ -49,6 +50,7 @@ public class ScannerRecyclerViewAdapter extends RecyclerView.Adapter<ScannerRecy
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
+        Log.d(TAG, ".onBindViewHolder() for device " + mValues.get(position).getName() + " at position " + position);
         holder.mItem = mValues.get(position);
         holder.mContentView.setText(mValues.get(position).getAddress());
 
@@ -86,12 +88,13 @@ public class ScannerRecyclerViewAdapter extends RecyclerView.Adapter<ScannerRecy
 //                        holder.mView.setElevation(20f);
 //                    }
 
-                    mListener.onListFragmentInteraction(mValues.get(position), position);
+                    mListener.onListFragmentInteraction(holder.mTitleView.getText().toString(), holder.mContentView.getText().toString(), position);
 
                     //holder.mButton.setVisibility(View.VISIBLE);
                 }
             }
         });
+
     }
 
 //    @Override

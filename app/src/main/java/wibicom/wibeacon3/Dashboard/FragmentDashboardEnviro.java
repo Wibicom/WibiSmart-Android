@@ -1,18 +1,35 @@
 package wibicom.wibeacon3.Dashboard;
 
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattService;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.ParcelUuid;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.TextView;
+import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.UUID;
+
+import wibicom.wibeacon3.BluetoothLeService;
+import wibicom.wibeacon3.MainActivity;
 import wibicom.wibeacon3.R;
+import wibicom.wibeacon3.SensorData;
+import wibicom.wibeacon3.WibiSmartGatt;
 
 
 public class FragmentDashboardEnviro extends Fragment {
+
 
     TextView batteryLevelText;
     TextView temperatureText;
@@ -29,10 +46,17 @@ public class FragmentDashboardEnviro extends Fragment {
     WebView webViewTemperature;
     WebView webViewHumidity;
     WebView webViewPressure;
+    WebView webViewCO2;
     WebView webViewAccelerometer;
     WebView webViewGeneralInfo;
 
+    CardView cardViewTemperature;
+    CardView cardViewHumidity;
+    CardView cardViewPressure;
+    CardView cardViewCO2;
+    CardView cardViewAccelerometer;
 
+    private final static String TAG = FragmentDashboardEnviro.class.getName();
 
     public FragmentDashboardEnviro() {
         // Required empty public constructor
@@ -66,6 +90,7 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewTemperature = (WebView) view.findViewById(R.id.webviewTemperature);
         webViewHumidity = (WebView) view.findViewById(R.id.webviewHumidity);
         webViewPressure = (WebView) view.findViewById(R.id.webviewPressure);
+        webViewCO2 = (WebView) view.findViewById(R.id.webviewCO2);
         webViewAccelerometer = (WebView) view.findViewById(R.id.webviewAccelerometer);
         webViewGeneralInfo = (WebView) view.findViewById(R.id.webview_general_info);
 
@@ -73,6 +98,7 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewTemperature.getSettings().setJavaScriptEnabled(true);
         webViewHumidity.getSettings().setJavaScriptEnabled(true);
         webViewPressure.getSettings().setJavaScriptEnabled(true);
+        webViewCO2.getSettings().setJavaScriptEnabled(true);
         webViewAccelerometer.getSettings().setJavaScriptEnabled(true);
         webViewGeneralInfo.getSettings().setJavaScriptEnabled(true);
 
@@ -80,6 +106,7 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewTemperature.loadUrl("file:///android_asset/temperature_widget.html");
         webViewHumidity.loadUrl("file:///android_asset/humidity_widget.html");
         webViewPressure.loadUrl("file:///android_asset/pressure_widget.html");
+        webViewCO2.loadUrl("file:///android_asset/CO2_widget.html");
         webViewAccelerometer.loadUrl("file:///android_asset/accelerometer_widget.html");
         webViewGeneralInfo.loadUrl("file:///android_asset/general_info_widget.html");
 
@@ -87,10 +114,18 @@ public class FragmentDashboardEnviro extends Fragment {
         //batteryLevelText.setText(Integer.toString(batteryLevel) + " %");
         webViewGeneralInfo.loadUrl("javascript:set_battery(" + Integer.toString(batteryLevel) + ")");
 
+        cardViewTemperature = (CardView) view.findViewById(R.id.cardviewTemperature);
+        cardViewHumidity = (CardView) view.findViewById(R.id.cardviewHumidity);
+        cardViewPressure = (CardView) view.findViewById(R.id.cardviewPressure);
+        cardViewAccelerometer = (CardView) view.findViewById(R.id.cardviewAccelerometer);
+        cardViewCO2 = (CardView) view.findViewById(R.id.cardviewCO2);
+
+        hideSensors();
+
         return view;
     }
 
-    public void updateData(float temperature, float pressure, float humidity, float accelerometerX, float accelerometerY, float accelerometerZ, int batteryLevel, int rssi, int light)
+    public void updateData(String name, float temperature, float pressure, float humidity, float accelerometerX, float accelerometerY, float accelerometerZ, int batteryLevel, int rssi, int light, int CO2)
     {
         //webViewTemperature.loadUrl("file:///android_asset/temperature_widget.html");
         //webViewTemperature.loadUrl("javascript:updateTemperature()");
@@ -108,6 +143,10 @@ public class FragmentDashboardEnviro extends Fragment {
             webViewGeneralInfo.loadUrl("javascript:set_battery(" + Integer.toString(batteryLevel) + ")");
             webViewGeneralInfo.loadUrl("javascript:set_rssi(" + Integer.toString(rssi) + ")");
             webViewGeneralInfo.loadUrl("javascript:set_light(" + light + ")");
+            webViewGeneralInfo.loadUrl("javascript:set_sensor_name('" + name.toString() + "')");
+        }
+        if(webViewCO2 != null) {
+            webViewCO2.loadUrl("javascript:updateCO2(" + Integer.toString(CO2) + ")");
         }
         else
             this.batteryLevel = batteryLevel;
@@ -155,6 +194,58 @@ public class FragmentDashboardEnviro extends Fragment {
 //            accelerometerTextZ.setText(Float.toString(accelerometerZ) + " mg");
 
 
+    }
+
+    public void hideSensors()
+    {
+        Log.d(TAG, "entering .hideSensors()");
+        SensorData sensor = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition());
+        if (sensor != null && sensor.getConnecteddeviceGatt() != null) {
+            ArrayList<BluetoothGattService> gattList = new ArrayList<>(MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getConnecteddeviceGatt().getServices());
+            boolean weatherSevice = false;
+            boolean CO2Service = false;
+            boolean accelerometerService = false;
+            if (cardViewCO2 != null) {
+                cardViewCO2.setVisibility(View.VISIBLE);
+                cardViewTemperature.setVisibility(View.VISIBLE);
+                cardViewHumidity.setVisibility(View.VISIBLE);
+                cardViewPressure.setVisibility(View.VISIBLE);
+                cardViewAccelerometer.setVisibility(View.VISIBLE);
+            }
+
+            WibiSmartGatt gatt = WibiSmartGatt.getInstance();
+            for (int i = 0; i < gattList.size(); i++) {
+                BluetoothGattService tempService = gattList.get(i);
+                if (tempService.getUuid().toString().equals(gatt.CO2_SERVICE_UUID_ENVIRO.toString())) {
+                    CO2Service = true;
+                    sensor.setHasCO2Sensor(true);
+                } else if (tempService.getUuid().toString().equals(gatt.WEATHER_SERVICE_UUID_ENVIRO.toString())) {
+                    weatherSevice = true;
+                    sensor.setHasWeatherSensor(true);
+                } else if (tempService.getUuid().toString().equals(gatt.ACCELEROMETER_SERVICE_UUID_ENVIRO.toString())) {
+                    accelerometerService = true;
+                    sensor.setHasAccelSensor(true);
+                } else if (tempService.getUuid().toString().equals(gatt.LIGHT_SERVICE_UUID_ENVIRO.toString())) {
+                    sensor.setHasLightSensor(true);
+                }
+
+            }
+
+            Log.d(TAG, ".hideSensors() Results for device " + MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getLocalName() + ": { accel: " + accelerometerService + ", weather:" + weatherSevice + ", CO2:" + CO2Service + "}");
+
+            if (!CO2Service && cardViewCO2 != null) {
+                cardViewCO2.setVisibility(View.GONE);
+            }
+            if (!weatherSevice && cardViewTemperature != null && cardViewHumidity != null && cardViewPressure != null) {
+                cardViewTemperature.setVisibility(View.GONE);
+                cardViewHumidity.setVisibility(View.GONE);
+                cardViewPressure.setVisibility(View.GONE);
+            }
+            if (!accelerometerService && cardViewAccelerometer != null) {
+                cardViewAccelerometer.setVisibility(View.GONE);
+            }
+
+        }
     }
 
 }

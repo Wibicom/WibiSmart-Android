@@ -1,31 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+android:key="preferenceScreenEnviro">
+
 
     <PreferenceCategory
-        android:title="General settings">
+        android:title="Connect to Watson IoT">
 
         <EditTextPreference
-            android:title="Device name"
-            android:summary="Set the name of the device"
-            android:dialogTitle="Set device name"
-            android:key="device_name_enviro"/>
+            android:title="Android device MAC adress"
+            android:summary="Input the MAC adress of your android device"
+            android:dialogTitle="Input device MAC adress"
+            android:key="android_device_mac_address"/>
 
         <EditTextPreference
-            android:title="Connection intervals"
-            android:summary="Set the intervals during a connection"
-            android:dialogTitle="Set connection intervals"
-            android:key="connection_intervals_enviro"/>
+            android:title="IoT authentification token"
+            android:summary="Inpput the IoT autentification token"
+            android:dialogTitle="Input the authentification token corresponding to the above adress"
+            android:key="iot_auth_token"/>
 
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="preferenceCatergoryAccelerometer"
         android:title="Accelerometer sensor">
 
         <CheckBoxPreference
-            android:title="On/Off"
+            android:key="accelerometer_checkbox_enviro"
             android:summary="Set the sensor on or off"
-            android:key="accelerometer_checkbox_enviro"/>
-
+            android:title="On/Off" />
         <wibicom.wibeacon3.SliderDialog
             android:title="Period"
             android:summary="Set the refreshing rate of the sensor"
@@ -36,6 +38,7 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="preferenceCatergoryWeather"
         android:title="Weather sensors">
 
         <CheckBoxPreference
@@ -54,6 +57,25 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="preferenceCatergoryCO2"
+        android:title="CO2 sensor">
+
+        <CheckBoxPreference
+            android:title="On/Off"
+            android:summary="Set the sensor on or off"
+            android:key="CO2_checkbox_enviro"/>
+
+        <wibicom.wibeacon3.SliderDialog
+            android:title="Period"
+            android:summary="Set the refreshing rate of the sensor"
+            android:dialogMessage="Set the refreshing rate of the CO2 sensor"
+            android:dialogTitle="Set sensor period"
+            android:key="CO2_period_enviro" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="preferenceCatergoryLight"
         android:title="ADC light approximation">
 
         <CheckBoxPreference

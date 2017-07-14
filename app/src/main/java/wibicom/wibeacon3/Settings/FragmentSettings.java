@@ -50,5 +50,17 @@ public class FragmentSettings extends Fragment {
         notConnectedMessage.setVisibility(View.INVISIBLE);
     }
 
+    public void setSettingsInitial(FragmentSettingsMove fragmentSetttingMove, FragmentSettingsEnviro fragmentSettingsEnviro) {
+        if(isSettingsEnviro) {
+            getChildFragmentManager().beginTransaction().remove(fragmentSettingsEnviro).commit();
+        }
+        else if(isSettingsMove) {
+            getChildFragmentManager().beginTransaction().remove(fragmentSetttingMove).commit();
+        }
+        isSettingsEnviro = false;
+        isSettingsMove = false;
+        notConnectedMessage.setVisibility(View.VISIBLE);
+    }
+
 
 }

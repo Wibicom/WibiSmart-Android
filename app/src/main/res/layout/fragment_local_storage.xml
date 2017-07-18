@@ -1,0 +1,185 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="wibicom.wibeacon3.FragmentLocalStorage">
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:layout_margin="16dp"
+        android:elevation="16dp"
+        android:layout_gravity="center">
+
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="397dp"
+            android:layout_gravity="center"
+            android:weightSum="1">
+
+
+            <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/main_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/imageView3"
+                    android:layout_gravity="right"
+                    android:background="@drawable/ic_sd_storage_black_24dp"
+                    android:clickable="true"
+                    android:layout_margin="16dp"
+                    android:layout_alignParentRight="true"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Local Storage"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                    android:textColor="@color/background_floating_material_dark"
+                    android:layout_margin="16dp"
+                    android:layout_alignParentLeft="true"/>
+
+            </android.support.design.widget.CoordinatorLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Push your local data to the WibiSmart database. Input a unique identifier to your bulk data to be able to later retrieve it at \nhttps://enviro-dashboard.mybluemix.net/"
+                android:textSize="15dp"
+                android:lineSpacingExtra="3dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="15dp"
+                android:typeface="normal"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                />
+
+            <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp">
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:ems="10"
+                    android:id="@+id/database_name_input"
+                    android:layout_gravity="left"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginRight="5dp"
+                    android:text="" />
+
+                <Button
+                    android:layout_width="64dp"
+                    android:layout_height="40dp"
+                    android:layout_marginRight="5dp"
+                    android:text="Push data"
+                    android:id="@+id/button_push_data"
+                    android:layout_gravity="right"
+                    android:background="@null"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:nestedScrollingEnabled="false"
+                    android:onClick="onPushDataPressed"
+                    />
+
+            </android.support.design.widget.CoordinatorLayout>
+
+
+            <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Your current storage is "
+                    android:id="@+id/data_count"
+                    android:textSize="15dp"
+                    android:lineSpacingExtra="3dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="15dp"
+                    android:typeface="normal"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    />
+
+                <Button
+                    android:layout_width="64dp"
+                    android:layout_height="40dp"
+                    android:layout_marginRight="5dp"
+                    android:text="Delete data"
+                    android:id="@+id/button_delete_data"
+                    android:layout_gravity="right"
+                    android:background="@null"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:nestedScrollingEnabled="false"
+                    android:onClick="onDeleteDataPressed"
+                    />
+
+            </android.support.design.widget.CoordinatorLayout>
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="If you currently do not have internet, you can store your data locally to later push it on the WibiSmart database."
+                android:textSize="15dp"
+                android:lineSpacingExtra="3dp"
+                android:layout_marginTop="5dp"
+                android:typeface="normal"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                />
+
+            <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp">
+
+                <Switch
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Activate local storage  "
+                    android:id="@+id/switch_local_storage"
+                    android:layout_marginLeft="16dp"
+                    android:checked="false"
+                    android:layout_marginTop="5dp" />
+
+                <Button
+                    android:layout_width="64dp"
+                    android:layout_height="26dp"
+                    android:layout_marginRight="5dp"
+                    android:text="Close"
+                    android:id="@+id/button_ok_local_storage"
+                    android:layout_gravity="right"
+                    android:background="@null"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:nestedScrollingEnabled="false"
+                    android:onClick="onOkButtonLocalStoragePressed" />
+
+            </android.support.design.widget.CoordinatorLayout>
+
+
+
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
+
+    <ImageView
+        android:layout_width="571dp"
+        android:layout_height="match_parent"
+        android:id="@+id/imageView8"
+        android:layout_gravity="center_horizontal|top"
+        android:background="#b4000000" />
+
+</FrameLayout>

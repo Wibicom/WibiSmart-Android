@@ -38,8 +38,12 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -49,7 +53,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import android.support.v7.widget.Toolbar;
@@ -66,6 +72,18 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.cloudant.sync.documentstore.AttachmentException;
+import com.cloudant.sync.documentstore.ConflictException;
+import com.cloudant.sync.documentstore.DocumentBodyFactory;
+import com.cloudant.sync.documentstore.DocumentNotFoundException;
+import com.cloudant.sync.documentstore.DocumentRevision;
+import com.cloudant.sync.documentstore.DocumentStore;
+import com.cloudant.sync.documentstore.DocumentStoreException;
+import com.cloudant.sync.query.Query;
+import com.cloudant.sync.query.QueryResult;
+import com.cloudant.sync.replication.Replicator;
+import com.cloudant.sync.replication.ReplicatorBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -94,7 +112,7 @@ import wibicom.wibeacon3.Settings.FragmentSettingsMove;
  * @author Olivier Tessier-Lariviere
  */
 @TargetApi(21)
-public class MainActivity extends AppCompatActivity implements /*BeaconConsumer, RangeNotifier,*/ FragmentScanner.OnListFragmentInteractionListener, FragmentPushToCloud.OnPushToCloudInteractionListener, FragmentSettingsEnviro.OnSettingsEnviroListener, FragmentSettingsMove.OnSettingsMoveListener {//, FragmentDashboardMove.OnFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements /*BeaconConsumer, RangeNotifier,*/ FragmentScanner.OnListFragmentInteractionListener, FragmentLocalStorage.OnLocalStorageInteractionListener, FragmentPushToCloud.OnPushToCloudInteractionListener, FragmentSettingsEnviro.OnSettingsEnviroListener, FragmentSettingsMove.OnSettingsMoveListener {//, FragmentDashboardMove.OnFragmentInteractionListener {
 
     private static MainActivity ourInstance;
 
@@ -125,16 +143,15 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
     FragmentSettingsEnviro fragmentSettingsEnviro;
 
     BluetoothDevice connectedDevice;
-
     List<BluetoothGatt> disconnectedDevicesGattList = new ArrayList<BluetoothGatt>();
-
     List<BluetoothDevice> connectedDevices = new ArrayList<>();
-
     List<SensorData> sensorDataList = new ArrayList<>();
 
     int connectedDevicePosition;
     int attemptConnectionPosition;
+
     boolean isTransmittingToCloud;
+
 
     Adapter viewPagerAdapter;
     ViewPager viewPager;
@@ -143,6 +160,10 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
     private GoogleApiClient client;
 
     private MqttHandler mMqttHandler;
+
+    DataHandler myDataHandler;
+    boolean isStoringLocally;
+
 
     private final static String TAG = MainActivity.class.getName();
 
@@ -174,19 +195,8 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
 
         mMqttHandler = mMqttHandler.getInstance(this);
-        /*Log.d(TAG, "MQTT connecting...");
-        mMqttHandler.connect(new IMqttActionListener() {
-            @Override
-            public void onSuccess(IMqttToken asyncActionToken) {
-                Log.d(TAG, "MQTT connected");
-            }
 
-            @Override
-            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                Log.d(TAG, "MQTT connection failure");
-                exception.printStackTrace();
-            }
-        });*/
+        myDataHandler = DataHandler.getInstance();
     }
 
 
@@ -295,6 +305,10 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
                 Fragment fragmentPushToCloud =  FragmentPushToCloud.newInstance(isTransmittingToCloud);
                 getFragmentManager().beginTransaction().add(android.R.id.content, fragmentPushToCloud,"fragmentPushToCloud").commit();
                 break;
+            case R.id.action_store_locally:
+                Fragment fragmentStoreLocally = FragmentLocalStorage.newInstance(isStoringLocally);
+                getFragmentManager().beginTransaction().add(android.R.id.content, fragmentStoreLocally,"fragmentStoreLocally").commit();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -351,74 +365,6 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         }
     }
 
-    /*private void pushToCloud() {
-        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected())
-        {
-            final String URL = "http://192.168.43.98:8000/receiveandroiddata/";// ;//"http://192.168.0.141:8000/receiveandroiddata/";//;//
-            // Post params to be sent to the server
-            HashMap<String, String> params = new HashMap<>();
-
-            SensorData sensor = sensorDataList.get(connectedDevicePosition);
-            params.put("temperature", Float.toString(sensor.getTemperatureEnviro()));
-            params.put("light", Integer.toString(sensor.getLightLevel()));
-            params.put("battery", Integer.toString(mBluetoothLeService.batteryLevel));//SensorData.getInstance().getBatteryLevel()));
-            params.put("deviceNb", mBluetoothLeService.getBluetoothAdress());
-            params.put("datetime", DateFormat.getDateTimeInstance().format(new Date()));
-
-            params.put("humidity", Float.toString(sensor.getHumidityEnviro()));
-            params.put("pressure", Float.toString(sensor.getPressureEnviro()));
-            params.put("accx", Float.toString(sensor.getAccelerometerX()));
-            params.put("accy", Float.toString(sensor.getAccelerometerY()));
-            params.put("accz", Float.toString(sensor.getAccelerometerZ()));
-
-            //params.put("deviceType", String.valueOf(mBluetoothLeService.modelNumberString));
-            params.put("deviceType", "ENVIRO");
-            params.put("deviceName", mBluetoothLeService.getDeviceName());
-
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            String token = prefs.getString("authToken", "notloggedin");//getSharedPreferences("ACCOUNT_PREF", Context.MODE_PRIVATE).getString("token", "notloggedin");
-            params.put("token", token);//VolleySingleton.getInstance(this).getAuthenticationToken());
-
-
-            JsonObjectRequest req = new JsonObjectRequest(URL, new JSONObject(params),
-                    new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            try {
-                                VolleyLog.v("Response:%n %s", response.toString(4));
-//                                Snackbar.make(findViewById(android.R.id.content), response.toString(4), Snackbar.LENGTH_LONG).setAction("Action", null).show();
-//                                String token = response.get("token").toString();
-//                                VolleySingleton.getInstance(getApplicationContext()).setAuthenticationToken(token);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    VolleyLog.e("Error: ", error.getMessage());
-                }
-            }){
-                @Override
-                public Map<String, String> getHeaders() throws AuthFailureError
-                {
-                    Map<String, String> params = new HashMap<>();
-                    params.put("Authorization", VolleySingleton.getInstance(getApplicationContext()).getAuthenticationToken());
-                    return params;
-                }
-            };
-
-            // add the request object to the queue to be executed
-            VolleySingleton.getInstance(this).addToRequestQueue(req);
-
-        }
-        else {
-            Snackbar.make(findViewById(android.R.id.content), "Oups, network is not connected", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
-        }
-    }*/
 
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
@@ -811,6 +757,12 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
 
     }
 
+    @Override
+    public void onSwitchInteractionLocalStorage(boolean switchOn) {
+        isStoringLocally = switchOn;
+    }
+
+
 
     static class Adapter extends FragmentPagerAdapter {
         private final List<Fragment> mFragments = new ArrayList<>();
@@ -957,6 +909,11 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         });
     }
 
+    public void displaySnackbar(String message) {
+        Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+    }
+
     public List<SensorData> getSensorDataList() {
         return sensorDataList;
     }
@@ -968,6 +925,8 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
     public boolean getIsTransmittingToCloud() {
         return isTransmittingToCloud;
     }
+
+    public boolean getIsStoringLocally() { return isStoringLocally; }
 
     public String getIsConnectingProcessWith() { return isConnectingProcessWith; }
 

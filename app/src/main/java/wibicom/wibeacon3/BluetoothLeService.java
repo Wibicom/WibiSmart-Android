@@ -20,10 +20,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Pair;
 
+import com.cloudant.sync.documentstore.AttachmentException;
+import com.cloudant.sync.documentstore.ConflictException;
+import com.cloudant.sync.documentstore.DocumentBodyFactory;
+import com.cloudant.sync.documentstore.DocumentRevision;
+import com.cloudant.sync.documentstore.DocumentStoreException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.TimeZone;
 import java.util.UUID;
 
 
@@ -315,7 +327,7 @@ public class BluetoothLeService extends Service {
             if(newState == BluetoothGatt.STATE_CONNECTED)
             {
                 if(MainActivity.getInstance().getIsConnectingProcessWith() != null && MainActivity.getInstance().getIsConnectingProcessWith().equals(gatt.getDevice().getAddress())) {
-                    Log.d(TAG, "device " + gatt.getDevice().getName() + "state change to conneted");
+                    Log.d(TAG, "device " + gatt.getDevice().getName() + "state change to connected");
                     broadcastUpdate(ACTION_GATT_CONNECTED);
                 }
                 else {
@@ -325,7 +337,7 @@ public class BluetoothLeService extends Service {
             }
             else
             {
-                Log.d(TAG, "device " + gatt.getDevice().getName() + "state change to DISconneted");
+                Log.d(TAG, "device " + gatt.getDevice().getName() + "state change to DISconnected");
                 MainActivity.getInstance().addDisconnectedDeviceToGattList(gatt);
                 broadcastUpdate(ACTION_GATT_DISCONNECTED);
             }
@@ -412,11 +424,31 @@ public class BluetoothLeService extends Service {
                 Log.d(TAG, "entering .onReadRemoteRssi() for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + " with rssi " + rssi + ".");
                 MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).setRssi(rssi);
 
-                if(MainActivity.getInstance().getIsTransmittingToCloud() && MqttHandler.getInstance(MainActivity.getInstance()).isConnected()) {
+                /*if(MainActivity.getInstance().getIsTransmittingToCloud() && MqttHandler.getInstance(MainActivity.getInstance()).isConnected()) {
                     String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'rssi' : '" + rssi + "' }}";
                     MqttHandler mqttHandler = MqttHandler.getInstance(null);
                     Log.d(TAG, "publishing rssi for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
                     mqttHandler.publish(mqttHandler.getTopicRssi(), message);
+                }*/
+                if(MainActivity.getInstance().getIsStoringLocally() || MainActivity.getInstance().getIsTransmittingToCloud()) {
+                    Map<String, Object> body = new HashMap<String, Object>();
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    Map<String, Object> d = new HashMap<String, Object>();
+                    d.put("rssi", rssi);
+                    data.put("d", d);
+                    body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
+                    body.put("localName", gatt.getDevice().getName());
+                    data.put("localName", gatt.getDevice().getName());
+                    body.put("eventType", "location");
+                    body.put("timestamp", getCurrentGMTTime());
+                    body.put("data", data);
+                    if(MainActivity.getInstance().getIsStoringLocally()) {
+                        DataHandler.getInstance().storeObject(body);
+                    }
+                    if(MainActivity.getInstance().getIsTransmittingToCloud()) {
+                        DataHandler.getInstance().pushOneFile(body);
+                    }
+
                 }
             }
         }
@@ -448,6 +480,7 @@ public class BluetoothLeService extends Service {
         }
         else {
             boolean transmitToCloud = MainActivity.getInstance().getIsTransmittingToCloud();
+            boolean storingLocally = MainActivity.getInstance().getIsStoringLocally();
             Log.d(TAG, "entering updateCharacteristicValue() for characteristic " + characteristic.getUuid().toString() + " for device " + thisSensorData.getLocalName() + ", isTransmitingToCloud: " + transmitToCloud + ".");
             byte byteArray[] = characteristic.getValue();
             // Set the right characteristic
@@ -463,13 +496,37 @@ public class BluetoothLeService extends Service {
                 thisSensorData.setTemperatureNordic(((int) byteArray[0]));
             } else if (characteristic.getUuid().toString().equals(NORDIC_SENSOR_VSOLAR_DATA_UUID)) {
                 thisSensorData.setVSolarNordic(byteArray[0] & 0xFF);
+
+                /*if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (byteArray[0] & 0xFF) != 0) {
+                    String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'light' : '" + (byteArray[0] & 0xFF) + "' }}";
+                    Log.d(TAG, "publishing light for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
+                    MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicHealth(), message);
+                }*/
             } else if (characteristic.getUuid().toString().equals(BATTERY_LEVEL_CHAR_UUID)) {
                 int batteryLevel = (byteArray[0] & 0xFF);
                 thisSensorData.setBatteryLevel(batteryLevel);
-                if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected()) {
+                /*if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected()) {
                     String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'batteryLevel' : '" + batteryLevel + "' }}";
                     Log.d(TAG, "publishing battery for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
                     MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicBattery(), message);
+                }*/
+                if (storingLocally || transmitToCloud) {
+                    Map<String, Object> body = new HashMap<String, Object>();
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    Map<String, Object> d = new HashMap<String, Object>();
+                    d.put("batteryLevel", batteryLevel);
+                    data.put("d", d);
+                    body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
+                    body.put("localName", gatt.getDevice().getName());
+                    body.put("eventType", "battery");
+                    body.put("timestamp", getCurrentGMTTime());
+                    body.put("data", data);
+                    if(storingLocally) {
+                        DataHandler.getInstance().storeObject(body);
+                    }
+                    if(transmitToCloud) {
+                        DataHandler.getInstance().pushOneFile(body);
+                    }
                 }
 
             } else if (characteristic.getUuid().toString().equals(TI_BAROMETER_DATA_CHAR_UUID)) {
@@ -479,16 +536,34 @@ public class BluetoothLeService extends Service {
                 }
                 thisSensorData.setWeatherEnviro(weatherTi);
                 float[] weather = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).parseWeatherEnviro(weatherTi);
-                if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (weather[0] != 0 || weather[1] != 0 || weather[2] != 0)) {
+                /*if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (weather[0] != 0 || weather[1] != 0 || weather[2] != 0)) {
                     String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'temperature' : '" + weather[0] + "', 'pressure' : '" + weather[1] + "', 'humidity' : '" + weather[2] + "' }}";
                     Log.d(TAG, "publishing weather for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
                     MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicAir(), message);
+                }*/
+                if((transmitToCloud || storingLocally) && (weather[0] != 0 || weather[1] != 0 || weather[2] != 0)) {
+                    Map<String, Object> body = new HashMap<String, Object>();
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    Map<String, Object> d = new HashMap<String, Object>();
+                    d.put("temperature", weather[0]);
+                    d.put("pressure", weather[1]);
+                    d.put("humidity", weather[2]);
+                    data.put("d", d);
+                    body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
+                    body.put("localName", gatt.getDevice().getName());
+                    body.put("eventType", "air");
+                    body.put("timestamp", getCurrentGMTTime());
+                    body.put("data", data);
+                    if(storingLocally) {
+                        DataHandler.getInstance().storeObject(body);
+                    }
+                    if(transmitToCloud) {
+                        DataHandler.getInstance().pushOneFile(body);
+                    }
+
                 }
             }
-        /*else if(characteristic.getUuid().toString().equals(TI_BAROMETER_CONF_CHAR_UUID))
-        {
-            weatherConfTi = ((int)byteArray[0]);
-        }*/
+
             else if (characteristic.getUuid().toString().equals(MODEL_NUMBER_STRING_CHAR_UUID)) {
                 char[] modelNumberString = thisSensorData.getModelNumberString();
                 if (modelNumberString.length != byteArray.length)
@@ -504,19 +579,57 @@ public class BluetoothLeService extends Service {
                 }
                 thisSensorData.setAccelerometer(accelerometerDatati);
                 float[] accelerometerData = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).parseAccelerometer(accelerometerDatati);
-                if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (accelerometerData[0] != 0 || accelerometerData[1] != 0 || accelerometerData[2] != 0)) {
+                /*if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (accelerometerData[0] != 0 || accelerometerData[1] != 0 || accelerometerData[2] != 0)) {
                     String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'x' : '" + accelerometerData[0] + "', 'y' : '" + accelerometerData[1] + "', 'z' : '" + accelerometerData[2] + "' }}";
                     Log.d(TAG, "publishing accel for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
                     MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicAccel(), message);
+                }*/
+                if ((transmitToCloud || storingLocally) && (accelerometerData[0] != 0 || accelerometerData[1] != 0 || accelerometerData[2] != 0)) {
+                    Map<String, Object> body = new HashMap<String, Object>();
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    Map<String, Object> d = new HashMap<String, Object>();
+                    d.put("x", accelerometerData[0]);
+                    d.put("y", accelerometerData[1]);
+                    d.put("z", accelerometerData[2]);
+                    data.put("d", d);
+                    body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
+                    body.put("localName", gatt.getDevice().getName());
+                    body.put("eventType", "accel");
+                    body.put("timestamp", getCurrentGMTTime());
+                    body.put("data", data);
+                    if(storingLocally) {
+                        DataHandler.getInstance().storeObject(body);
+                    }
+                    if(transmitToCloud) {
+                        DataHandler.getInstance().pushOneFile(body);
+                    }
                 }
             } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().LIGHT_DATA_CHAR_UUID_ENVIRO)) {
                 thisSensorData.setLightLevel(byteArray);
 
                 int lightLevel = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).parseLightLevel(byteArray);
-                if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && lightLevel != 0) {
+                /*if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && lightLevel != 0) {
                     String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'light' : '" + lightLevel + "' }}";
                     Log.d(TAG, "publishing light for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
                     MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicHealth(), message);
+                }*/
+                if ((transmitToCloud || storingLocally) && lightLevel != 0) {
+                    Map<String, Object> body = new HashMap<String, Object>();
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    Map<String, Object> d = new HashMap<String, Object>();
+                    d.put("light", lightLevel);
+                    data.put("d", d);
+                    body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
+                    body.put("localName", gatt.getDevice().getName());
+                    body.put("eventType", "health");
+                    body.put("timestamp", getCurrentGMTTime());
+                    body.put("data", data);
+                    if(storingLocally) {
+                        DataHandler.getInstance().storeObject(body);
+                    }
+                    if(transmitToCloud) {
+                        DataHandler.getInstance().pushOneFile(body);
+                    }
                 }
             } else if (characteristic.getUuid().toString().equals(NORDIC_SENSOR_ACCELEROMETER_DATA_UUID)) {
                 thisSensorData.setAccelerometer(byteArray);
@@ -625,6 +738,56 @@ public class BluetoothLeService extends Service {
     }
 
 
+    public String getCurrentGMTTime() {
+        String out;
+        Date date = new Date();
+        char[] miliseconds = (date.getTime()+"").toCharArray();
+
+        String[] fullDate = date.toGMTString().split(" ");
+        out = fullDate[2] + "-";
+        switch (fullDate[1]) {
+            case "Jan":
+                out += "01-";
+                break;
+            case "Feb":
+                out += "02-";
+                break;
+            case "Mar":
+                out += "03-";
+                break;
+            case "Apr":
+                out += "04-";
+                break;
+            case "May":
+                out += "05-";
+                break;
+            case "Jun":
+                out += "06-";
+                break;
+            case "Jul":
+                out += "07-";
+                break;
+            case "Aug":
+                out += "08-";
+                break;
+            case "Sep":
+                out += "09-";
+                break;
+            case "Oct":
+                out += "10-";
+                break;
+            case "Nov":
+                out += "11-";
+                break;
+            case "Dec":
+                out += "12-";
+                break;
+        }
+        out += fullDate[0] + "T" + fullDate[3] + "." + miliseconds[10] + miliseconds[11] + miliseconds[12] + "Z";
+
+
+        return out;
+    }
 
 
 

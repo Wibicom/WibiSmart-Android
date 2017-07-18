@@ -158,6 +158,10 @@ public class FragmentScanner extends Fragment {
         ArrayList<BluetoothDevice> devices = (ArrayList) deviceList;
         int connectionPos = devices.indexOf(device);
         if(connectionPos != -1) {
+            for(int i = 0 ; connectedDeviceList.size() > i ; i++) {
+                TextView statusLabel = (TextView) connectedDeviceRecyclerView.getLayoutManager().getChildAt(i).findViewById(R.id.scanner_item_status);
+                statusLabel.setText("CONNECTED");
+            }
             deviceList.remove(connectionPos);
             scannerRecyclerViewAdapter.remove(pos);
             connectedDeviceList.add(device);

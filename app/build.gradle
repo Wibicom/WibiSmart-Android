@@ -25,6 +25,8 @@ repositories {
     maven {
         url "https://repo.eclipse.org/content/repositories/paho-snapshots/"
     }
+    mavenLocal()
+    mavenCentral()
 }
 
 dependencies {
@@ -44,5 +46,8 @@ dependencies {
     compile('org.eclipse.paho:org.eclipse.paho.android.service:1.1.2-SNAPSHOT') {
         exclude module: 'support-v4'
     }
+
+    compile group: 'com.cloudant', name: 'cloudant-client', version: '2.9.0'
+    compile group: 'com.cloudant', name: 'cloudant-sync-datastore-android', version:'latest.release'
 
 }

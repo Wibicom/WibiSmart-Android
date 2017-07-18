@@ -49,7 +49,7 @@ public class ConnectedDeviceRecyclerViewAdapter extends RecyclerView.Adapter<Con
             holder.mTitleView.setText(mValues.get(position).getName());
         else
             holder.mTitleView.setText("N/A");
-        holder.mStatus.setText("CONNECTED");
+        holder.mStatus.setText("SELECTED");
         Log.d(TAG, ".onBindViewHolder() for device " + mValues.get(position).getName() + " at position " + position);
 
         holder.mView.setOnClickListener(new View.OnClickListener() {

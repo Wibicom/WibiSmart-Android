@@ -143,7 +143,7 @@ public class FragmentDashboardEnviro extends Fragment {
             webViewGeneralInfo.loadUrl("javascript:set_battery(" + Integer.toString(batteryLevel) + ")");
             webViewGeneralInfo.loadUrl("javascript:set_rssi(" + Integer.toString(rssi) + ")");
             webViewGeneralInfo.loadUrl("javascript:set_light(" + light + ")");
-            webViewGeneralInfo.loadUrl("javascript:set_sensor_name('" + name.toString() + "')");
+            webViewGeneralInfo.loadUrl("javascript:set_sensor_name('" + name + "')");
         }
         if(webViewCO2 != null) {
             webViewCO2.loadUrl("javascript:updateCO2(" + Integer.toString(CO2) + ")");

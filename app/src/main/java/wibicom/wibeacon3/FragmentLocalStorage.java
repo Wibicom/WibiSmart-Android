@@ -71,7 +71,8 @@ public class FragmentLocalStorage extends Fragment {
         buttonPushData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(inputDatabaseName.getText().toString().length() > 3) {
+                if(inputDatabaseName.getText().toString().length() > 3 && inputDatabaseName.getText().toString().indexOf("iotp_4rxa4d_default_") == -1) {
+                    MainActivity.getInstance().displaySnackbar("Transmitting data to " + inputDatabaseName.getText().toString() + " database...");
                     DataHandler.getInstance().pushAllFilesInLocalStorage(inputDatabaseName.getText().toString());
                 }
                 else {
@@ -83,6 +84,7 @@ public class FragmentLocalStorage extends Fragment {
         buttonDeleteData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                MainActivity.getInstance().displaySnackbar("Deleting local files...");
                 DataHandler.getInstance().deleteAllStoredDocuments();
                 messageTextView.setText("Your current storage is 0 files.");
             }

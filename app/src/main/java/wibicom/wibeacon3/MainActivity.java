@@ -100,6 +100,7 @@ import wibicom.wibeacon3.Account.AccountActivity;
 import wibicom.wibeacon3.Dashboard.FragmentDashboard;
 import wibicom.wibeacon3.Dashboard.FragmentDashboardEnviro;
 import wibicom.wibeacon3.Dashboard.FragmentDashboardMove;
+import wibicom.wibeacon3.Historical.HistoricalDashboardActivity;
 import wibicom.wibeacon3.Scanner.FragmentScanner;
 import wibicom.wibeacon3.Settings.FragmentSettings;
 import wibicom.wibeacon3.Settings.FragmentSettingsEnviro;
@@ -287,6 +288,11 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
                         if(id == R.id.account_drawer)
                         {
                             Intent intent = new Intent(getApplicationContext(), AccountActivity.class);
+                            startActivity(intent);
+                        }
+                        else if(id == R.id.historical_dashboard_drawer)
+                        {
+                            Intent intent = new Intent(getApplicationContext(), HistoricalDashboardActivity.class);
                             startActivity(intent);
                         }
                         mDrawerLayout.closeDrawers();

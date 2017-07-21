@@ -1,5 +1,6 @@
 package wibicom.wibeacon3;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -19,6 +20,7 @@ import com.cloudant.sync.query.Query;
 import com.cloudant.sync.query.QueryException;
 import com.cloudant.sync.query.QueryResult;
 import com.google.gson.JsonObject;
+import com.google.gson.internal.LinkedTreeMap;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,11 +31,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import wibicom.wibeacon3.Historical.HistoricalDashboardActivity;
+
 /**
  * Created by Michael Vaquier on 2017-07-17.
  */
 
 public class DataHandler {
+
     private static DataHandler instance;
     private static String pushingbulkTo = null;
     private boolean createNewDatabase = false;
@@ -63,8 +68,8 @@ public class DataHandler {
                 .password("dcb7a77744a9d8691e8cc098fe7ba645bb9311fe0311528c86ec21cc5ff8a066")
                 .build();
 
-        pushingbulkTo = "test";
 
+        //new QueryWithIndexTask().execute("iotp_4rxa4d_default_2017-07-17");
 
 
     }
@@ -186,6 +191,99 @@ public class DataHandler {
         }
     }
 
+    private class QueryWithIndexTask extends AsyncTask<String, Void, List<Object>> {
+        @Override
+        protected List<Object> doInBackground(String... params) {
+            Log.d(TAG, "Querry for "+params[1]+" "+params[2]+" "+params[0]);
+            Database targetDatabase;
+            if(params[0].equals("date") && doesDatabaseExist("iotp_4rxa4d_default_"+params[2])) {
+                targetDatabase = client.database("iotp_4rxa4d_default_"+params[2], false);
+            }
+            else if(params[0].equals("bulk") && doesDatabaseExist(params[2])) {
+                targetDatabase = client.database(params[2], false);
+            }
+            else {
+                Log.d(TAG, "QueryWithIndexTask did not find the database "+params[2]);
+                return new ArrayList<Object>();
+            }
+            return targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\"},\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", Object.class);
+        }
+
+        @Override
+        protected void onPostExecute(List<Object> out) {
+            Log.d(TAG, "QueryWithIndexTask onPostExecute() retrieved " + out.size() + " data ponts.");
+            HashMap<String, String> results = new HashMap<String, String>();
+            results.put("temperature", "");
+            results.put("humidity", "");
+            results.put("pressure", "");
+            results.put("battery", "");
+            results.put("light", "");
+            results.put("rssi", "");
+            results.put("CO2", "");
+            results.put("accel", "");
+            for(int i = 0; i < out.size(); i++) {
+                LinkedTreeMap<String,Object> thisMap = (LinkedTreeMap<String,Object>)out.get(i);
+                String eventType = (String)thisMap.get("eventType");
+                LinkedTreeMap<String ,Object> tempMap;
+                tempMap = (LinkedTreeMap<String,Object>) thisMap.get("data");
+                tempMap = (LinkedTreeMap<String,Object>) tempMap.get("d");
+                switch (eventType) {
+                    case "air":
+                        addDataPointToCSVString(thisMap, tempMap, results, "temperature", "temperature");
+                        addDataPointToCSVString(thisMap, tempMap, results, "humidity", "humidity");
+                        addDataPointToCSVString(thisMap, tempMap, results, "pressure", "pressure");
+                        break;
+                    case "accel":
+                        String[] specialLabels = {"x", "y", "z"};
+                        addDataPointToCSVString(thisMap, tempMap, results, "accel", specialLabels);
+                        break;
+                    case "battery":
+                        addDataPointToCSVString(thisMap, tempMap, results, "battery", "batteryLevel");
+                        break;
+                    case "location":
+                        addDataPointToCSVString(thisMap, tempMap, results, "rssi", "rssi");
+                        break;
+                    case "health":
+                        addDataPointToCSVString(thisMap, tempMap, results, "light", "light");
+                        break;
+                    case "CO2":
+                        addDataPointToCSVString(thisMap, tempMap, results, "CO2", "CO2");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            HistoricalDashboardActivity.getInstance().dataReady(results);
+        }
+    }
+
+    private void addDataPointToCSVString(LinkedTreeMap<String, Object> tempMap, LinkedTreeMap<String, Object> tempDataMap, HashMap<String, String> resultMap, String resultKeyWord, String dataKeyWord) {
+        String csvString;
+        csvString = resultMap.get(resultKeyWord);
+        csvString += tempMap.get("timestamp") + "," + tempDataMap.get(dataKeyWord) + "\\n";
+
+        resultMap.put(resultKeyWord, csvString);
+    }
+
+    private void addDataPointToCSVString(LinkedTreeMap<String, Object> tempMap, LinkedTreeMap<String, Object> tempDataMap, HashMap<String, String> resultMap, String resultKeyWord, String[] dataKeyWord) {
+        String csvString;
+        csvString = resultMap.get(resultKeyWord);
+        csvString += tempMap.get("timestamp") + ",";
+        for(int i = 0;i < dataKeyWord.length ; i++) {
+            csvString += tempDataMap.get(dataKeyWord[i]);
+            if(!((i + 1) < dataKeyWord.length)) {
+                csvString += "\\n";
+            }
+            else {
+                csvString += ",";
+            }
+        }
+
+        resultMap.put(resultKeyWord, csvString);
+    }
+
+
+
     public void pushAllFilesInLocalStorage(String databaseName) {
         pushingbulkTo = databaseName;
         Map<String, Object> map = new HashMap<String, Object>();
@@ -222,6 +320,21 @@ public class DataHandler {
         HashMap<String, Object> data = (HashMap<String, Object>)file;
         Log.d(TAG, ".publishOneFile() for device " + data.get("localName") + " and eventType " + data.get("eventType"));
     }
+
+    public void requestData(String[] request) {
+        new QueryWithIndexTask().execute(request);
+    }
+
+    private boolean doesDatabaseExist(String name) {
+        List<String> allDbs = client.getAllDbs();
+        for(String thisName : allDbs) {
+            if(name.equals(thisName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 
 }

@@ -10,6 +10,12 @@
             android:textColor="#FFFFFF"/>
 
         <item
+            android:id="@+id/historical_dashboard_drawer"
+            android:icon="@drawable/ic_show_chart_black_24dp"
+            android:title="Historical Dashboard"
+            android:textColor="#FFB7C6CD"/>
+
+        <item
             android:id="@+id/beacon_scanner_drawer"
             android:icon="@drawable/ic_track_changes_black_24px"
             android:title="Beacon scanner"

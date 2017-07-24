@@ -415,10 +415,25 @@ public class DataHandler {
                 done = true;
                 publishProgress(25);
             }
-            for(int i = 0; i < size; i++) {
+            int skip;
+            if(size<500) {
+                skip = 1;
+            }
+            else if(size>=500 && size<3000) {
+                skip = size/50;
+            }
+            else if(size>=3000 && size<10000) {
+                skip = size/70;
+            }
+            else {
+                skip = size/90;
+            }
+            int incremnt = 0;
+            for(int i = 0; i < size; i+=skip) {
                 LinkedTreeMap<String,Object> thisMap = out.get(i);
-                if(!done && (i%inc) == 0 ) {
-                    publishProgress(1);
+                if(!done && (i/inc) >= incremnt ) {
+                    publishProgress(1 + incremnt- (i/inc));
+                    incremnt++;
                 }
                 LinkedTreeMap<String ,LinkedTreeMap<String,Double>> tempMapOut;
                 tempMapOut = (LinkedTreeMap<String,LinkedTreeMap<String,Double>>) thisMap.get("data");

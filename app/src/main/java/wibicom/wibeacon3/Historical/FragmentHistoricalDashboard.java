@@ -126,6 +126,14 @@ public class FragmentHistoricalDashboard extends Fragment {
     }
 
     public void updateGraph() {
+        cardViewTemperatureGraph.setVisibility(View.GONE);
+        cardViewHumidityGraph.setVisibility(View.GONE);
+        cardViewPressureGraph.setVisibility(View.GONE);
+        cardViewAccelerometerGraph.setVisibility(View.GONE);
+        cardViewCO2Graph.setVisibility(View.GONE);
+        cardViewLightGraph.setVisibility(View.GONE);
+        cardViewBatteryGraph.setVisibility(View.GONE);
+        cardViewRSSIGraph.setVisibility(View.GONE);
         //webViewTemperatureGraph.loadUrl("javascript:render_graph('Temperature (°C)', 'Timestamp,temperature\\nThu Jul 20 2017 00:00:02 GMT,23.2\\nThu Jul 20 2017 00:00:22 GMT,23.2\\nThu Jul 20 2017 00:00:42 GMT,23.2\\nThu Jul 20 2017 00:01:02 GMT,23.1\\nThu Jul 20 2017 00:01:22 GMT,23.1')");
         //webViewTemperatureGraph.loadUrl("javascript:render_graph('" + csv + "')");
         String id = deviceId.getText().toString();
@@ -223,6 +231,82 @@ public class FragmentHistoricalDashboard extends Fragment {
             csv = "Timestamp,Battery\\n"+csv;
             webViewBatteryGraph.loadUrl("javascript:render_graph('Battery (%)', '" + csv + "')");
             cardViewBatteryGraph.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void renderWeather(HashMap<String,String> csvMap) {
+        cardViewTemperatureGraph.setVisibility(View.GONE);
+        cardViewHumidityGraph.setVisibility(View.GONE);
+        cardViewPressureGraph.setVisibility(View.GONE);
+        cardViewCO2Graph.setVisibility(View.GONE);
+
+        Log.d(TAG, "Rendering weather graphs...");
+        String csv = csvMap.get("temperature");
+        if(!csv.equals("")) {
+            csv = "Timestamp,Temperature\\n"+csv;
+            webViewTemperatureGraph.loadUrl("javascript:render_graph('Temperature (°C)', '" + csv + "')");
+            cardViewTemperatureGraph.setVisibility(View.VISIBLE);
+        }
+        csv = csvMap.get("humidity");
+        if(!csv.equals("")) {
+            csv = "Timestamp,Humidity\\n"+csv;
+            webViewHumidityGraph.loadUrl("javascript:render_graph('Humidity (%)', '" + csv + "')");
+            cardViewHumidityGraph.setVisibility(View.VISIBLE);
+        }
+        csv = csvMap.get("pressure");
+        if(!csv.equals("")) {
+            csv = "Timestamp,Pressure\\n"+csv;
+            webViewPressureGraph.loadUrl("javascript:render_graph('Pressure (mBar)', '" + csv + "')");
+            cardViewPressureGraph.setVisibility(View.VISIBLE);
+        }
+        csv = csvMap.get("CO2");
+        if(!csv.equals("")) {
+            csv = "Timestamp,CO2\\n"+csv;
+            webViewCO2Graph.loadUrl("javascript:render_graph('CO2 (ppm)', '" + csv + "')");
+            cardViewCO2Graph.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void renderLightBattery(HashMap<String,String> csvMap) {
+        cardViewLightGraph.setVisibility(View.GONE);
+        cardViewBatteryGraph.setVisibility(View.GONE);
+        Log.d(TAG, "Rendering battery/light graphs...");
+        String csv;
+        csv = csvMap.get("light");
+        if(!csv.equals("")) {
+            csv = "Timestamp,Light\\n"+csv;
+            webViewLightGraph.loadUrl("javascript:render_graph('Light (mV)', '" + csv + "')");
+            cardViewLightGraph.setVisibility(View.VISIBLE);
+        }
+        csv = csvMap.get("battery");
+        if(!csv.equals("")) {
+            csv = "Timestamp,Battery\\n"+csv;
+            webViewBatteryGraph.loadUrl("javascript:render_graph('Battery (%)', '" + csv + "')");
+            cardViewBatteryGraph.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void renderRSSI(HashMap<String,String> csvMap) {
+        cardViewRSSIGraph.setVisibility(View.GONE);
+        Log.d(TAG, "Rendering RSSI graphs...");
+        String csv;
+        csv = csvMap.get("rssi");
+        if(!csv.equals("")) {
+            csv = "Timestamp,RSSI\\n"+csv;
+            webViewRSSIGraph.loadUrl("javascript:render_graph('RSSI (dBm)', '" + csv + "')");
+            cardViewRSSIGraph.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void renderAccel(HashMap<String,String> csvMap) {
+        cardViewAccelerometerGraph.setVisibility(View.GONE);
+        Log.d(TAG, "Rendering accel graphs...");
+        String csv;
+        csv = csvMap.get("accel");
+        if(!csv.equals("")) {
+            csv = "Timestamp,x,y,z\\n"+csv;
+            webViewAccelerometerGraph.loadUrl("javascript:render_graph('Acceleration (mg)', '" + csv + "')");
+            cardViewAccelerometerGraph.setVisibility(View.VISIBLE);
         }
     }
 

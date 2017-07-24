@@ -53,8 +53,20 @@ public class HistoricalDashboardActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void dataReady(HashMap<String ,String> csvMap) {
-        fragmentHistoricalDashboard.renderGraphs(csvMap);
+    public void dataReady(String type, HashMap<String ,String> csvMap) {
+        switch (type) {
+            case "weather":
+                fragmentHistoricalDashboard.renderWeather(csvMap);
+                break;
+            case "battery/light":
+                fragmentHistoricalDashboard.renderLightBattery(csvMap);
+                break;
+            case "accel":
+                fragmentHistoricalDashboard.renderAccel(csvMap);
+                break;
+            case "RSSI":
+                fragmentHistoricalDashboard.renderRSSI(csvMap);
+        }
     }
 
     public FragmentHistoricalDashboard getFragmentHistoricalDashboard() { return fragmentHistoricalDashboard; }

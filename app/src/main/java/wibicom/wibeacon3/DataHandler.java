@@ -193,7 +193,7 @@ public class DataHandler {
         }
     }
 
-    private class QueryWithIndexTask extends AsyncTask<String, Integer, HashMap<String,String>> {
+    private class QueryWeatherWithIndexTask extends AsyncTask<String, Integer, HashMap<String,String>> {
         @Override
         protected HashMap<String,String> doInBackground(String... params) {
             Log.d(TAG, "Querry for "+params[1]+" "+params[2]+" "+params[0]);
@@ -206,27 +206,33 @@ public class DataHandler {
             }
             else {
                 Log.d(TAG, "QueryWithIndexTask did not find the database "+params[2]);
-                return new HashMap<String, String>();
+                HashMap<String, String> results = new HashMap<String, String>();
+                results.put("temperature", "");
+                results.put("humidity", "");
+                results.put("pressure", "");
+                results.put("CO2", "");
+                return results;
             }
-            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\"},\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
+            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"$or\" : [{\"eventType\" : \"air\"}, {\"eventType\" : \"CO2\"}] },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-            Log.d(TAG, "QueryWithIndexTask onPostExecute() retrieved " + out.size() + " data pionts.");
+            Log.d(TAG, "QueryWithIndexTask weather retrieved " + out.size() + " data pionts.");
             HashMap<String, String> results = new HashMap<String, String>();
             results.put("temperature", "");
             results.put("humidity", "");
             results.put("pressure", "");
-            results.put("battery", "");
-            results.put("light", "");
-            results.put("rssi", "");
             results.put("CO2", "");
-            results.put("accel", "");
             int size = out.size();
-            int inc = size/100;
+            int inc = size/25;
+            boolean done = false;
+            if (inc == 0) {
+                done = true;
+                publishProgress(25);
+            }
             for(int i = 0; i < size; i++) {
                 LinkedTreeMap<String,Object> thisMap = out.get(i);
                 String eventType = (String)thisMap.get("eventType");
-                if((i%inc) == 0 ) {
-                    publishProgress(i / inc);
+                if(!done && (i%inc) == 0 ) {
+                    publishProgress(1);
                 }
                 LinkedTreeMap<String ,LinkedTreeMap<String,Double>> tempMapOut;
                 tempMapOut = (LinkedTreeMap<String,LinkedTreeMap<String,Double>>) thisMap.get("data");
@@ -236,19 +242,6 @@ public class DataHandler {
                         addDataPointToCSVString(thisMap, tempMap, results, "temperature", "temperature");
                         addDataPointToCSVString(thisMap, tempMap, results, "humidity", "humidity");
                         addDataPointToCSVString(thisMap, tempMap, results, "pressure", "pressure");
-                        break;
-                    case "accel":
-                        String[] specialLabels = {"x", "y", "z"};
-                        addDataPointToCSVString(thisMap, tempMap, results, "accel", specialLabels);
-                        break;
-                    case "battery":
-                        addDataPointToCSVString(thisMap, tempMap, results, "battery", "batteryLevel");
-                        break;
-                    case "location":
-                        addDataPointToCSVString(thisMap, tempMap, results, "rssi", "rssi");
-                        break;
-                    case "health":
-                        addDataPointToCSVString(thisMap, tempMap, results, "light", "light");
                         break;
                     case "CO2":
                         addDataPointToCSVString(thisMap, tempMap, results, "CO2", "CO2");
@@ -263,12 +256,187 @@ public class DataHandler {
         @Override
         protected void onPostExecute(HashMap<String,String> out) {
             HistoricalDashboardActivity historicalDashboardActivity = HistoricalDashboardActivity.getInstance();
-            historicalDashboardActivity.dataReady(out);
+            historicalDashboardActivity.dataReady("weather", out);
         }
 
         @Override
         protected void onProgressUpdate(Integer... i) {
-            HistoricalDashboardActivity.getInstance().getFragmentHistoricalDashboard().getProgressBar().setProgress(i[0]);
+            HistoricalDashboardActivity.getInstance().getFragmentHistoricalDashboard().getProgressBar().incrementProgressBy(i[0]);
+        }
+    }
+
+    private class QueryLightBatteryWithIndexTask extends AsyncTask<String, Integer, HashMap<String,String>> {
+        @Override
+        protected HashMap<String,String> doInBackground(String... params) {
+            Log.d(TAG, "Querry for "+params[1]+" "+params[2]+" "+params[0]);
+            Database targetDatabase;
+            if(params[0].equals("date") && doesDatabaseExist("iotp_4rxa4d_default_"+params[2])) {
+                targetDatabase = client.database("iotp_4rxa4d_default_"+params[2], false);
+            }
+            else if(params[0].equals("bulk") && doesDatabaseExist(params[2])) {
+                targetDatabase = client.database(params[2], false);
+            }
+            else {
+                Log.d(TAG, "QueryWithIndexTask did not find the database "+params[2]);
+                HashMap<String, String> results = new HashMap<String, String>();
+                results.put("battery", "");
+                results.put("light", "");
+                return results;
+            }
+            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"$or\" : [{\"eventType\" : \"battery\"}, {\"eventType\" : \"health\"}] },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
+            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+            Log.d(TAG, "QueryWithIndexTask battery/light retrieved " + out.size() + " data pionts.");
+            HashMap<String, String> results = new HashMap<String, String>();
+            results.put("battery", "");
+            results.put("light", "");
+            int size = out.size();
+            int inc = size/25;
+            boolean done = false;
+            if (inc == 0) {
+                done = true;
+                publishProgress(25);
+            }
+            for(int i = 0; i < size; i++) {
+                LinkedTreeMap<String,Object> thisMap = out.get(i);
+                String eventType = (String)thisMap.get("eventType");
+                if(!done && (i%inc) == 0 ) {
+                    publishProgress(1);
+                }
+                LinkedTreeMap<String ,LinkedTreeMap<String,Double>> tempMapOut;
+                tempMapOut = (LinkedTreeMap<String,LinkedTreeMap<String,Double>>) thisMap.get("data");
+                LinkedTreeMap<String,Double> tempMap = tempMapOut.get("d");
+                switch (eventType) {
+                    case "battery":
+                        addDataPointToCSVString(thisMap, tempMap, results, "battery", "batteryLevel");
+                        break;
+                    case "health":
+                        addDataPointToCSVString(thisMap, tempMap, results, "light", "light");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return results;
+        }
+
+        @Override
+        protected void onPostExecute(HashMap<String,String> out) {
+            HistoricalDashboardActivity historicalDashboardActivity = HistoricalDashboardActivity.getInstance();
+            historicalDashboardActivity.dataReady("battery/light", out);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... i) {
+            HistoricalDashboardActivity.getInstance().getFragmentHistoricalDashboard().getProgressBar().incrementProgressBy(i[0]);
+        }
+    }
+
+    private class QueryAccelWithIndexTask extends AsyncTask<String, Integer, HashMap<String,String>> {
+        @Override
+        protected HashMap<String,String> doInBackground(String... params) {
+            Log.d(TAG, "Querry for "+params[1]+" "+params[2]+" "+params[0]);
+            Database targetDatabase;
+            if(params[0].equals("date") && doesDatabaseExist("iotp_4rxa4d_default_"+params[2])) {
+                targetDatabase = client.database("iotp_4rxa4d_default_"+params[2], false);
+            }
+            else if(params[0].equals("bulk") && doesDatabaseExist(params[2])) {
+                targetDatabase = client.database(params[2], false);
+            }
+            else {
+                Log.d(TAG, "QueryWithIndexTask did not find the database "+params[2]);
+                HashMap<String, String> results = new HashMap<String, String>();
+                results.put("accel", "");
+                return results;
+            }
+            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"eventType\" : \"accel\" },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
+            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+            Log.d(TAG, "QueryWithIndexTask accel retrieved " + out.size() + " data pionts.");
+            HashMap<String, String> results = new HashMap<String, String>();
+            results.put("accel", "");
+            int size = out.size();
+            int inc = size/25;
+            boolean done = false;
+            if (inc == 0) {
+                done = true;
+                publishProgress(25);
+            }
+            for(int i = 0; i < size; i++) {
+                LinkedTreeMap<String,Object> thisMap = out.get(i);
+                if(!done && (i%inc) == 0 ) {
+                    publishProgress(1);
+                }
+                LinkedTreeMap<String ,LinkedTreeMap<String,Double>> tempMapOut;
+                tempMapOut = (LinkedTreeMap<String,LinkedTreeMap<String,Double>>) thisMap.get("data");
+                LinkedTreeMap<String,Double> tempMap = tempMapOut.get("d");
+                String[] specialLabels = {"x", "y", "z"};
+                addDataPointToCSVString(thisMap, tempMap, results, "accel", specialLabels);
+            }
+            return results;
+        }
+
+        @Override
+        protected void onPostExecute(HashMap<String,String> out) {
+            HistoricalDashboardActivity historicalDashboardActivity = HistoricalDashboardActivity.getInstance();
+            historicalDashboardActivity.dataReady("accel", out);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... i) {
+            HistoricalDashboardActivity.getInstance().getFragmentHistoricalDashboard().getProgressBar().incrementProgressBy(i[0]);
+        }
+    }
+
+    private class QueryRSSIWithIndexTask extends AsyncTask<String, Integer, HashMap<String,String>> {
+        @Override
+        protected HashMap<String,String> doInBackground(String... params) {
+            Log.d(TAG, "Querry for "+params[1]+" "+params[2]+" "+params[0]);
+            Database targetDatabase;
+            if(params[0].equals("date") && doesDatabaseExist("iotp_4rxa4d_default_"+params[2])) {
+                targetDatabase = client.database("iotp_4rxa4d_default_"+params[2], false);
+            }
+            else if(params[0].equals("bulk") && doesDatabaseExist(params[2])) {
+                targetDatabase = client.database(params[2], false);
+            }
+            else {
+                Log.d(TAG, "QueryWithIndexTask did not find the database "+params[2]);
+                HashMap<String, String> results = new HashMap<String, String>();
+                results.put("rssi", "");
+                return results;
+            }
+            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"eventType\" : \"location\" },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
+            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+            Log.d(TAG, "QueryWithIndexTask rssi retrieved " + out.size() + " data pionts.");
+            HashMap<String, String> results = new HashMap<String, String>();
+            results.put("rssi", "");
+            int size = out.size();
+            int inc = size/25;
+            boolean done = false;
+            if (inc == 0) {
+                done = true;
+                publishProgress(25);
+            }
+            for(int i = 0; i < size; i++) {
+                LinkedTreeMap<String,Object> thisMap = out.get(i);
+                if(!done && (i%inc) == 0 ) {
+                    publishProgress(1);
+                }
+                LinkedTreeMap<String ,LinkedTreeMap<String,Double>> tempMapOut;
+                tempMapOut = (LinkedTreeMap<String,LinkedTreeMap<String,Double>>) thisMap.get("data");
+                LinkedTreeMap<String,Double> tempMap = tempMapOut.get("d");
+                addDataPointToCSVString(thisMap, tempMap, results, "rssi", "rssi");
+            }
+            return results;
+        }
+
+        @Override
+        protected void onPostExecute(HashMap<String,String> out) {
+            HistoricalDashboardActivity historicalDashboardActivity = HistoricalDashboardActivity.getInstance();
+            historicalDashboardActivity.dataReady("RSSI", out);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... i) {
+            HistoricalDashboardActivity.getInstance().getFragmentHistoricalDashboard().getProgressBar().incrementProgressBy(i[0]);
         }
     }
 
@@ -337,7 +505,10 @@ public class DataHandler {
     }
 
     public void requestData(String[] request) {
-        new QueryWithIndexTask().execute(request);
+        new QueryWeatherWithIndexTask().execute(request);
+        new QueryLightBatteryWithIndexTask().execute(request);
+        new QueryAccelWithIndexTask().execute(request);
+        new QueryRSSIWithIndexTask().execute(request);
     }
 
     private boolean doesDatabaseExist(String name) {

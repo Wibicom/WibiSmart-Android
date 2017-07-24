@@ -6,13 +6,13 @@
 
 
 
-
-            <LinearLayout
+    <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:orientation="vertical"
                 android:weightSum="1">
+
 
                 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
                     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -29,11 +29,13 @@
                         android:text="Query Date" />
 
                     <TextView
-                        android:layout_gravity="left"
+                        android:layout_gravity="start"
                         android:layout_marginLeft="5dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Device ID" />
+
+
 
 
                 </android.support.design.widget.CoordinatorLayout>
@@ -76,8 +78,17 @@
                         android:inputType="date"
                         android:paddingLeft="10dp" />
 
+
+
                 </android.support.design.widget.CoordinatorLayout>
 
+                <ProgressBar
+                    android:id="@+id/dataProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_height="wrap_content" />
 
                 <android.support.v4.widget.NestedScrollView
                     android:layout_width="match_parent"

@@ -57,4 +57,6 @@ public class HistoricalDashboardActivity extends AppCompatActivity {
         fragmentHistoricalDashboard.renderGraphs(csvMap);
     }
 
+    public FragmentHistoricalDashboard getFragmentHistoricalDashboard() { return fragmentHistoricalDashboard; }
+
 }

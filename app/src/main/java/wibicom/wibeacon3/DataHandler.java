@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.ProgressBar;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import wibicom.wibeacon3.Historical.FragmentHistoricalDashboard;
 import wibicom.wibeacon3.Historical.HistoricalDashboardActivity;
 
 /**
@@ -191,9 +193,9 @@ public class DataHandler {
         }
     }
 
-    private class QueryWithIndexTask extends AsyncTask<String, Void, List<Object>> {
+    private class QueryWithIndexTask extends AsyncTask<String, Integer, HashMap<String,String>> {
         @Override
-        protected List<Object> doInBackground(String... params) {
+        protected HashMap<String,String> doInBackground(String... params) {
             Log.d(TAG, "Querry for "+params[1]+" "+params[2]+" "+params[0]);
             Database targetDatabase;
             if(params[0].equals("date") && doesDatabaseExist("iotp_4rxa4d_default_"+params[2])) {
@@ -204,14 +206,11 @@ public class DataHandler {
             }
             else {
                 Log.d(TAG, "QueryWithIndexTask did not find the database "+params[2]);
-                return new ArrayList<Object>();
+                return new HashMap<String, String>();
             }
-            return targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\"},\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", Object.class);
-        }
-
-        @Override
-        protected void onPostExecute(List<Object> out) {
-            Log.d(TAG, "QueryWithIndexTask onPostExecute() retrieved " + out.size() + " data ponts.");
+            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\"},\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
+            Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+            Log.d(TAG, "QueryWithIndexTask onPostExecute() retrieved " + out.size() + " data pionts.");
             HashMap<String, String> results = new HashMap<String, String>();
             results.put("temperature", "");
             results.put("humidity", "");
@@ -221,12 +220,17 @@ public class DataHandler {
             results.put("rssi", "");
             results.put("CO2", "");
             results.put("accel", "");
-            for(int i = 0; i < out.size(); i++) {
-                LinkedTreeMap<String,Object> thisMap = (LinkedTreeMap<String,Object>)out.get(i);
+            int size = out.size();
+            int inc = size/100;
+            for(int i = 0; i < size; i++) {
+                LinkedTreeMap<String,Object> thisMap = out.get(i);
                 String eventType = (String)thisMap.get("eventType");
-                LinkedTreeMap<String ,Object> tempMap;
-                tempMap = (LinkedTreeMap<String,Object>) thisMap.get("data");
-                tempMap = (LinkedTreeMap<String,Object>) tempMap.get("d");
+                if((i%inc) == 0 ) {
+                    publishProgress(i / inc);
+                }
+                LinkedTreeMap<String ,LinkedTreeMap<String,Double>> tempMapOut;
+                tempMapOut = (LinkedTreeMap<String,LinkedTreeMap<String,Double>>) thisMap.get("data");
+                LinkedTreeMap<String,Double> tempMap = tempMapOut.get("d");
                 switch (eventType) {
                     case "air":
                         addDataPointToCSVString(thisMap, tempMap, results, "temperature", "temperature");
@@ -253,11 +257,22 @@ public class DataHandler {
                         break;
                 }
             }
-            HistoricalDashboardActivity.getInstance().dataReady(results);
+            return results;
+        }
+
+        @Override
+        protected void onPostExecute(HashMap<String,String> out) {
+            HistoricalDashboardActivity historicalDashboardActivity = HistoricalDashboardActivity.getInstance();
+            historicalDashboardActivity.dataReady(out);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... i) {
+            HistoricalDashboardActivity.getInstance().getFragmentHistoricalDashboard().getProgressBar().setProgress(i[0]);
         }
     }
 
-    private void addDataPointToCSVString(LinkedTreeMap<String, Object> tempMap, LinkedTreeMap<String, Object> tempDataMap, HashMap<String, String> resultMap, String resultKeyWord, String dataKeyWord) {
+    private void addDataPointToCSVString(LinkedTreeMap<String, Object> tempMap, LinkedTreeMap<String, Double> tempDataMap, HashMap<String, String> resultMap, String resultKeyWord, String dataKeyWord) {
         String csvString;
         csvString = resultMap.get(resultKeyWord);
         csvString += tempMap.get("timestamp") + "," + tempDataMap.get(dataKeyWord) + "\\n";
@@ -265,7 +280,7 @@ public class DataHandler {
         resultMap.put(resultKeyWord, csvString);
     }
 
-    private void addDataPointToCSVString(LinkedTreeMap<String, Object> tempMap, LinkedTreeMap<String, Object> tempDataMap, HashMap<String, String> resultMap, String resultKeyWord, String[] dataKeyWord) {
+    private void addDataPointToCSVString(LinkedTreeMap<String, Object> tempMap, LinkedTreeMap<String, Double> tempDataMap, HashMap<String, String> resultMap, String resultKeyWord, String[] dataKeyWord) {
         String csvString;
         csvString = resultMap.get(resultKeyWord);
         csvString += tempMap.get("timestamp") + ",";

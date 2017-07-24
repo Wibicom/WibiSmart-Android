@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.HashMap;
@@ -43,6 +44,8 @@ public class FragmentHistoricalDashboard extends Fragment {
 
     TextView deviceId;
     TextView inputDate;
+
+    ProgressBar progressBar;
 
     boolean querryingDate = true;
 
@@ -110,6 +113,8 @@ public class FragmentHistoricalDashboard extends Fragment {
         deviceId = (TextView) view.findViewById(R.id.deviceIdInput);
         inputDate = (TextView) view.findViewById(R.id.dateInput);
 
+        progressBar = (ProgressBar) view.findViewById(R.id.dataProgress);
+        progressBar.setMax(100);
 
         buttonSearch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,6 +139,7 @@ public class FragmentHistoricalDashboard extends Fragment {
                         data[0] = "date";
                         data[1] = id;
                         data[2] = date.replaceAll("/", "-");
+                        progressBar.setProgress(0);
                         DataHandler.getInstance().requestData(data);
                     }
                     else {
@@ -146,6 +152,7 @@ public class FragmentHistoricalDashboard extends Fragment {
                     data[0] = "bulk";
                     data[1] = id;
                     data[2] = date;
+                    progressBar.setProgress(0);
                     DataHandler.getInstance().requestData(data);
                 }
             }
@@ -218,6 +225,8 @@ public class FragmentHistoricalDashboard extends Fragment {
             cardViewBatteryGraph.setVisibility(View.VISIBLE);
         }
     }
+
+    public ProgressBar getProgressBar() { return progressBar; }
 
 
 

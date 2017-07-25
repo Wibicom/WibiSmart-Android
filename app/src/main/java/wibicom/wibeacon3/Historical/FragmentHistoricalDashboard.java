@@ -2,14 +2,18 @@ package wibicom.wibeacon3.Historical;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.renderscript.ScriptGroup;
 import android.support.v7.widget.CardView;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import java.util.HashMap;
@@ -44,10 +48,13 @@ public class FragmentHistoricalDashboard extends Fragment {
 
     TextView deviceId;
     TextView inputDate;
+    Switch querySwitch;
+    TextView queryTag;
+    TextView message;
 
     ProgressBar progressBar;
 
-    boolean querryingDate = true;
+    boolean queryingDate = true;
 
     private final static String TAG = FragmentHistoricalDashboard.class.getName();
 
@@ -115,6 +122,32 @@ public class FragmentHistoricalDashboard extends Fragment {
 
         progressBar = (ProgressBar) view.findViewById(R.id.dataProgress);
         progressBar.setMax(100);
+        progressBar.setVisibility(View.GONE);
+
+        message = (TextView) view.findViewById(R.id.historical_dashboard_message);
+
+        queryTag = (TextView) view.findViewById(R.id.queryMode);
+        querySwitch = (Switch) view.findViewById(R.id.querySwitch);
+        querySwitch.setChecked(true);
+        querySwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                queryingDate = querySwitch.isChecked();
+                inputDate.setText("");
+                if(queryingDate) {
+                    queryTag.setText("Query Date");
+                    inputDate.setInputType(InputType.TYPE_CLASS_DATETIME);
+                    inputDate.setHint("yyyy/mm/dd");
+                    message.setText("Input a device ID and Date to see your data");
+                }
+                else {
+                    queryTag.setText("Query Database");
+                    inputDate.setInputType(InputType.TYPE_CLASS_TEXT);
+                    inputDate.setHint("Database");
+                    message.setText("Input a device ID and database to see your data");
+                }
+            }
+        });
 
         buttonSearch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,42 +167,45 @@ public class FragmentHistoricalDashboard extends Fragment {
         cardViewLightGraph.setVisibility(View.GONE);
         cardViewBatteryGraph.setVisibility(View.GONE);
         cardViewRSSIGraph.setVisibility(View.GONE);
-        //webViewTemperatureGraph.loadUrl("javascript:render_graph('Temperature (°C)', 'Timestamp,temperature\\nThu Jul 20 2017 00:00:02 GMT,23.2\\nThu Jul 20 2017 00:00:22 GMT,23.2\\nThu Jul 20 2017 00:00:42 GMT,23.2\\nThu Jul 20 2017 00:01:02 GMT,23.1\\nThu Jul 20 2017 00:01:22 GMT,23.1')");
-        //webViewTemperatureGraph.loadUrl("javascript:render_graph('" + csv + "')");
         String id = deviceId.getText().toString();
         String date = inputDate.getText().toString();
         if(id.length() > 0 && date.length() > 0) {
             if(id.length() == 12) {
-                if(querryingDate) {
+                if(queryingDate) {
                     if(date.split("/").length == 3) {
-                        MainActivity.getInstance().displaySnackbar("Sending request...");
                         String[] data = new String[3];
                         data[0] = "date";
                         data[1] = id;
                         data[2] = date.replaceAll("/", "-");
                         progressBar.setProgress(0);
+                        progressBar.setVisibility(View.VISIBLE);
+                        message.setVisibility(View.GONE);
                         DataHandler.getInstance().requestData(data);
                     }
                     else {
-                        MainActivity.getInstance().displaySnackbar("Input date is not valid...");
+                        message.setText("Input date is not valid...");
+                        message.setVisibility(View.VISIBLE);
                     }
                 }
                 else {
-                    MainActivity.getInstance().displaySnackbar("Sending request...");
                     String[] data = new String[3];
                     data[0] = "bulk";
                     data[1] = id;
                     data[2] = date;
                     progressBar.setProgress(0);
+                    progressBar.setVisibility(View.VISIBLE);
+                    message.setVisibility(View.GONE);
                     DataHandler.getInstance().requestData(data);
                 }
             }
             else {
-                MainActivity.getInstance().displaySnackbar("This is not a valid device ID...");
+                message.setText("This is not a valid device ID...");
+                message.setVisibility(View.VISIBLE);
             }
         }
         else {
-            MainActivity.getInstance().displaySnackbar("One of the inputs is missing...");
+            message.setText("One of the inputs is missing...");
+            message.setVisibility(View.VISIBLE);
         }
     }
 
@@ -199,7 +235,7 @@ public class FragmentHistoricalDashboard extends Fragment {
         csv = csvMap.get("pressure");
         if(!csv.equals("")) {
             csv = "Timestamp,Pressure\\n"+csv;
-            webViewPressureGraph.loadUrl("javascript:render_graph('Pressure (mBar)', '" + csv + "')");
+            webViewPressureGraph.loadUrl("javascript:render_graph('Pressure (mbar)', '" + csv + "')");
             cardViewPressureGraph.setVisibility(View.VISIBLE);
         }
         csv = csvMap.get("accel");
@@ -296,6 +332,9 @@ public class FragmentHistoricalDashboard extends Fragment {
             webViewRSSIGraph.loadUrl("javascript:render_graph('RSSI (dBm)', '" + csv + "')");
             cardViewRSSIGraph.setVisibility(View.VISIBLE);
         }
+        progressBar.setVisibility(View.GONE);
+        message.setText("Query completed!");
+        message.setVisibility(View.VISIBLE);
     }
 
     public void renderAccel(HashMap<String,String> csvMap) {

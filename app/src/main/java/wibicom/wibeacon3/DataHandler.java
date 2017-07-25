@@ -215,7 +215,7 @@ public class DataHandler {
             }
             List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"$or\" : [{\"eventType\" : \"air\"}, {\"eventType\" : \"CO2\"}] },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-            Log.d(TAG, "QueryWithIndexTask weather retrieved " + out.size() + " data pionts.");
+            Log.d(TAG, "QueryWithIndexTask weather retrieved " + out.size() + " data points.");
             HashMap<String, String> results = new HashMap<String, String>();
             results.put("temperature", "");
             results.put("humidity", "");
@@ -285,7 +285,7 @@ public class DataHandler {
             }
             List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"$or\" : [{\"eventType\" : \"battery\"}, {\"eventType\" : \"health\"}] },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-            Log.d(TAG, "QueryWithIndexTask battery/light retrieved " + out.size() + " data pionts.");
+            Log.d(TAG, "QueryWithIndexTask battery/light retrieved " + out.size() + " data points.");
             HashMap<String, String> results = new HashMap<String, String>();
             results.put("battery", "");
             results.put("light", "");
@@ -350,7 +350,7 @@ public class DataHandler {
             }
             List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"eventType\" : \"accel\" },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-            Log.d(TAG, "QueryWithIndexTask accel retrieved " + out.size() + " data pionts.");
+            Log.d(TAG, "QueryWithIndexTask accel retrieved " + out.size() + " data points.");
             HashMap<String, String> results = new HashMap<String, String>();
             results.put("accel", "");
             int size = out.size();
@@ -405,7 +405,7 @@ public class DataHandler {
             }
             List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"eventType\" : \"location\" },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-            Log.d(TAG, "QueryWithIndexTask rssi retrieved " + out.size() + " data pionts.");
+            Log.d(TAG, "QueryWithIndexTask rssi retrieved " + out.size() + " data points.");
             HashMap<String, String> results = new HashMap<String, String>();
             results.put("rssi", "");
             int size = out.size();

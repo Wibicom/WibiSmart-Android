@@ -37,16 +37,23 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
     PreferenceCategory weatherPreference;
     PreferenceCategory lightPreference;
     PreferenceCategory CO2Preference;
+    PreferenceCategory gasesPreference;
 
     boolean nonManualAccelCheckBoxChange = false;
     boolean nonManualWeatherCheckBoxChange = false;
     boolean nonManualLightCheckBoxChange = false;
     boolean nonManualCO2CheckboxChange = false;
+    boolean nonManualSO2CheckBoxChange = false;
+    boolean nonManualCOCheckBoxChange = false;
+    boolean nonManualO3CheckBoxChange = false;
+    boolean nonManualNO2CheckBoxChange = false;
+
 
     boolean nonManualAccelPeriodChange = false;
     boolean nonManualWeatherPeriodChange = false;
     boolean nonManualLightPeriodChange = false;
     boolean nonManualCO2PeriodChange = false;
+    boolean nonManualGasesPeriodChange = false;
 
     private final static String TAG = FragmentSettingsEnviro.class.getName();
 
@@ -72,6 +79,7 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         weatherPreference = (PreferenceCategory)findPreference("preferenceCatergoryWeather");
         lightPreference = (PreferenceCategory)findPreference("preferenceCatergoryLight");
         CO2Preference = (PreferenceCategory)findPreference("preferenceCatergoryCO2");
+        gasesPreference = (PreferenceCategory)findPreference("preferenceCatergoryGases");
 
     }
 
@@ -207,6 +215,23 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
             }
             nonManualCO2CheckboxChange = false;
         }
+        else if(key.equals("CO2_checkbox_enviro"))
+        {
+            if(!nonManualCO2CheckboxChange) {
+                CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
+                byte value[] = {0x00};
+                if (checkBoxPreference.isChecked())
+                    value[0] = 0x01;
+
+                sensor.setCO2SensorOn(value[0] == 1);
+                UUID uuid = WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO;
+                Log.d(TAG, "CO2 checkbox toggled to " + value[0]);
+                if (sensor.getHasCO2Sensor()) {
+                    mListener.writeCharacteristic(uuid, value);
+                }
+            }
+            nonManualCO2CheckboxChange = false;
+        }
         else if(key.equals("CO2_period_enviro"))
         {
             SliderDialog sliderPref = (SliderDialog)pref;
@@ -217,6 +242,129 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
             if(!nonManualCO2PeriodChange && sensor.getHasCO2Sensor()) {
                 mListener.writeCharacteristic(uuid, value);
                 sensor.setLastCO2Period(period);
+            }
+
+            period = period*100;
+            pref.setSummary(period + " milliseconds");
+        }
+        else if(key.equals("SO2_checkbox_enviro"))
+        {
+            if(!nonManualSO2CheckBoxChange) {
+                CheckBoxPreference checkBoxPreferenceSO2 = (CheckBoxPreference) pref;
+                byte value[] = {0};
+
+                if(getSO2Checkbox()) {
+                    value[0] += 1;
+                }
+                if(getCOCheckbox()) {
+                    value[0] += 2;
+                }
+                if(getO3Checkbox()) {
+                    value[0] += 4;
+                }
+                if(getNO2Checkbox()) {
+                    value[0] += 8;
+                }
+                sensor.setSO2SensorOn(checkBoxPreferenceSO2.isChecked());
+                UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
+                Log.d(TAG, "SO2 checkbox toggled to " + value[0]);
+                if (sensor.getHasGasesSensor()) {
+                    mListener.writeCharacteristic(uuid, value);
+                }
+            }
+            nonManualSO2CheckBoxChange = false;
+        }
+        else if(key.equals("CO_checkbox_enviro"))
+        {
+            if(!nonManualCOCheckBoxChange) {
+                CheckBoxPreference checkBoxPreferenceCO = (CheckBoxPreference) pref;
+                byte value[] = {0};
+
+                if(getSO2Checkbox()) {
+                    value[0] += 1;
+                }
+                if(getCOCheckbox()) {
+                    value[0] += 2;
+                }
+                if(getO3Checkbox()) {
+                    value[0] += 4;
+                }
+                if(getNO2Checkbox()) {
+                    value[0] += 8;
+                }
+                sensor.setSO2SensorOn(checkBoxPreferenceCO.isChecked());
+                UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
+                Log.d(TAG, "CO checkbox toggled to " + value[0]);
+                if (sensor.getHasGasesSensor()) {
+                    mListener.writeCharacteristic(uuid, value);
+                }
+            }
+            nonManualCOCheckBoxChange = false;
+        }
+        else if(key.equals("O3_checkbox_enviro"))
+        {
+            if(!nonManualO3CheckBoxChange) {
+                CheckBoxPreference checkBoxPreferenceO3 = (CheckBoxPreference) pref;
+                byte value[] = {0};
+
+                if(getSO2Checkbox()) {
+                    value[0] += 1;
+                }
+                if(getCOCheckbox()) {
+                    value[0] += 2;
+                }
+                if(getO3Checkbox()) {
+                    value[0] += 4;
+                }
+                if(getNO2Checkbox()) {
+                    value[0] += 8;
+                }
+                sensor.setSO2SensorOn(checkBoxPreferenceO3.isChecked());
+                UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
+                Log.d(TAG, "O3 checkbox toggled to " + value[0]);
+                if (sensor.getHasGasesSensor()) {
+                    mListener.writeCharacteristic(uuid, value);
+                }
+            }
+            nonManualO3CheckBoxChange = false;
+        }
+        else if(key.equals("NO2_checkbox_enviro"))
+        {
+            if(!nonManualNO2CheckBoxChange) {
+                CheckBoxPreference checkBoxPreferenceNO2 = (CheckBoxPreference) pref;
+                byte value[] = {0};
+
+                if(getSO2Checkbox()) {
+                    value[0] += 1;
+                }
+                if(getCOCheckbox()) {
+                    value[0] += 2;
+                }
+                if(getO3Checkbox()) {
+                    value[0] += 4;
+                }
+                if(getNO2Checkbox()) {
+                    value[0] += 8;
+                }
+                sensor.setSO2SensorOn(checkBoxPreferenceNO2.isChecked());
+                UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
+                Log.d(TAG, "NO2 checkbox toggled to " + value[0]);
+                if (sensor.getHasGasesSensor()) {
+                    mListener.writeCharacteristic(uuid, value);
+                }
+            }
+            nonManualNO2CheckBoxChange = false;
+        }
+        else if(key.equals("gases_period_enviro"))
+        {
+            SliderDialog sliderPref = (SliderDialog)pref;
+            Integer period = sliderPref.getSliderValue();
+            Log.d(TAG, "gases period changed to " + period);
+            byte value[] = {period.byteValue()};
+            UUID uuid = WibiSmartGatt.getInstance().SPEC_PEROÏOD_CHAR_UUID_ENVIRO;
+            if(!nonManualGasesPeriodChange && sensor.getHasGasesSensor()) {
+                mListener.writeCharacteristic(uuid, value);
+                sensor.setLastGasesPeriod(period);
             }
 
             period = period*100;
@@ -284,6 +432,70 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         return false;
     }
 
+    public void setSO2Checkbox(boolean check)
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("SO2_checkbox_enviro");
+        if (pref != null)
+            pref.setChecked(check);
+    }
+
+    public boolean getSO2Checkbox()
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("SO2_checkbox_enviro");
+        if (pref != null)
+            return pref.isChecked();
+        return false;
+    }
+
+
+    public void setCOCheckbox(boolean check)
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("CO_checkbox_enviro");
+        if (pref != null)
+            pref.setChecked(check);
+    }
+
+    public boolean getCOCheckbox()
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("CO_checkbox_enviro");
+        if (pref != null)
+            return pref.isChecked();
+        return false;
+    }
+
+
+    public void setO3Checkbox(boolean check)
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("O3_checkbox_enviro");
+        if (pref != null)
+            pref.setChecked(check);
+    }
+
+    public boolean getO3Checkbox()
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("O3_checkbox_enviro");
+        if (pref != null)
+            return pref.isChecked();
+        return false;
+    }
+
+
+    public void setNO2Checkbox(boolean check)
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("NO2_checkbox_enviro");
+        if (pref != null)
+            pref.setChecked(check);
+    }
+
+    public boolean getNO2Checkbox()
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("NO2_checkbox_enviro");
+        if (pref != null)
+            return pref.isChecked();
+        return false;
+    }
+
+
 
     public int getAccelPeriod() {
         SliderDialog pref = (SliderDialog)findPreference("accelerometer_period_enviro");
@@ -345,6 +557,21 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         }
     }
 
+    public int getGasesPeriod() {
+        SliderDialog pref = (SliderDialog)findPreference("gases_period_enviro");
+        if (pref != null)
+            return pref.getSliderValue().intValue();
+        return 5;
+    }
+
+    public void setGasesPeriod(int val) {
+        SliderDialog pref = (SliderDialog)findPreference("gases_period_enviro");
+        if (pref != null) {
+            pref.setSliderValue(val);
+            pref.setSummary((val * 100) + " milliseconds");
+        }
+    }
+
 
 
     @Override
@@ -388,12 +615,14 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         boolean CO2Service = false;
         boolean accelerometerService = false;
         boolean lightService = false;
+        boolean gasesService = false;
 
         if(accelPreference != null && myPreferenceScreeen != null) {
             myPreferenceScreeen.addPreference(accelPreference);
             myPreferenceScreeen.addPreference(weatherPreference);
             myPreferenceScreeen.addPreference(CO2Preference);
             myPreferenceScreeen.addPreference(lightPreference);
+            myPreferenceScreeen.addPreference(gasesPreference);
         }
 
         WibiSmartGatt gatt = WibiSmartGatt.getInstance();
@@ -411,9 +640,12 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
             else if (tempService.getUuid().toString().equals(gatt.LIGHT_SERVICE_UUID_ENVIRO.toString())) {
                 lightService = true;
             }
+            else if (tempService.getUuid().toString().equals(gatt.SPEC_SERVICE_UUID_ENVIRO.toString())) {
+                gasesService = true;
+            }
         }
 
-        Log.d(TAG, ".syncSettings() Results: { accel: "+ accelerometerService + ", weather:" + weatherSevice+ ", CO2:" + CO2Service + ", light:" + lightService+ "}");
+        Log.d(TAG, ".syncSettings() Results: { accel: "+ accelerometerService + ", weather:" + weatherSevice+ ", CO2:" + CO2Service + ", gases:" + gasesService + ", light:" + lightService+ "}");
 
         if(myPreferenceScreeen != null) {
             if (!accelerometerService && accelPreference != null) {
@@ -427,6 +659,9 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
             }
             if(!CO2Service && CO2Preference != null) {
                 myPreferenceScreeen.removePreference(CO2Preference);
+            }
+            if(!gasesService && gasesPreference != null) {
+                myPreferenceScreeen.removePreference(gasesPreference);
             }
         }
         else {
@@ -442,6 +677,14 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         setLightCheckbox(sensor.getLightSensorOn());
         nonManualWeatherCheckBoxChange = (sensor.getWeatherSensorOn() != getWeatherCheckbox());
         setWeatherCheckbox(sensor.getWeatherSensorOn());
+        nonManualSO2CheckBoxChange = (sensor.getSO2SensorOn() != getSO2Checkbox());
+        setSO2Checkbox(sensor.getSO2SensorOn());
+        nonManualCOCheckBoxChange = (sensor.getCOSensorOn() != getCOCheckbox());
+        setCOCheckbox(sensor.getCOSensorOn());
+        nonManualO3CheckBoxChange = (sensor.getO3SensorOn() != getO3Checkbox());
+        setO3Checkbox(sensor.getO3SensorOn());
+        nonManualNO2CheckBoxChange = (sensor.getNO2SensorOn() != getNO2Checkbox());
+        setNO2Checkbox(sensor.getNO2SensorOn());
 
         nonManualAccelPeriodChange = (sensor.getLastAccelPeriod() != getAccelPeriod());
         setAccelPeriod(sensor.getLastAccelPeriod());
@@ -451,6 +694,8 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         setLightPeriod(sensor.getLastLightPeriod());
         nonManualWeatherPeriodChange = (sensor.getLastWeatherPeriod() != getWeatherPeriod());
         setWeatherPeriod(sensor.getLastWeatherPeriod());
+        nonManualGasesPeriodChange = (sensor.getLastGasesPeriod() != getGasesPeriod());
+        setGasesPeriod(sensor.getLastGasesPeriod());
     }
 
     private void attemptIoTConnection() {

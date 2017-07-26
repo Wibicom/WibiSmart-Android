@@ -55,11 +55,11 @@ public class HistoricalDashboardActivity extends AppCompatActivity {
 
     public void dataReady(String type, HashMap<String ,String> csvMap) {
         switch (type) {
-            case "weather":
-                fragmentHistoricalDashboard.renderWeather(csvMap);
+            case "weather/CO2":
+                fragmentHistoricalDashboard.renderWeatherCO2(csvMap);
                 break;
-            case "battery/light":
-                fragmentHistoricalDashboard.renderLightBattery(csvMap);
+            case "battery/light/gases":
+                fragmentHistoricalDashboard.renderLightBatteryGases(csvMap);
                 break;
             case "accel":
                 fragmentHistoricalDashboard.renderAccel(csvMap);

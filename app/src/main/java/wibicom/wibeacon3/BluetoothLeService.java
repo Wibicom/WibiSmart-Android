@@ -68,10 +68,16 @@ public class BluetoothLeService extends Service {
     private static final String TI_BAROMETER_CAL_CHAR_UUID = "0000aa42-0000-1000-8000-00805f9b34fb";
     private static final String TI_BAROMETER_PERI_CHAR_UUID = "0000aa42-0000-1000-8000-00805f9b34fb";
 
-    private static final String CO2_SERVICE_UUID = "0000cc30-0000-1000-8000-00805f9b34fb";
-    private static final String CO2_DATA_CHAR_UUID = "0000cc31-0000-1000-8000-00805f9b34fb";
-    private static final String CO2_CONF_CHAR_UUID = "0000cc32-0000-1000-8000-00805f9b34fb";
-    private static final String CO2_PEROÏOD_CHAR_UUID = "0000cc34-0000-1000-8000-00805f9b34fb";
+    private static final String SPEC_SERVICE_UUID = "0000bb10-0000-1000-8000-00805f9b34fb";
+    private static final String SPEC_DATA_CHAR_UUID = "0000bb11-0000-1000-8000-00805f9b34fb";
+    private static final String SPEC_CONF_CHAR_UUID = "0000bb12-0000-1000-8000-00805f9b34fb";
+    private static final String SPEC_PEROÏOD_CHAR_UUID = "0000bb14-0000-1000-8000-00805f9b34fb";
+
+
+    private static final String CO2_SERVICE_UUID = "0000cc10-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_DATA_CHAR_UUID = "0000cc11-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_CONF_CHAR_UUID = "0000cc12-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_PEROÏOD_CHAR_UUID = "0000cc14-0000-1000-8000-00805f9b34fb";
 
     private static final String MODEL_NUMBER_STRING_CHAR_UUID = "00002a24-0000-1000-8000-00805f9b34fb";
     private static final String TI_ACCELEROMETER_DATA_CHAR_UUID = "0000aa81-0000-1000-8000-00805f9b34fb";
@@ -464,7 +470,8 @@ public class BluetoothLeService extends Service {
                 || characteristic.getUuid().toString().equals(TI_ACCELEROMETER_DATA_CHAR_UUID)
                 || characteristic.getUuid().toString().equals(NORDIC_SENSOR_ACCELEROMETER_DATA_UUID)
                 || characteristic.getUuid().equals(WibiSmartGatt.getInstance().LIGHT_DATA_CHAR_UUID_ENVIRO)
-                || characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_DATA_CHAR_UUID_ENVIRO))
+                || characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_DATA_CHAR_UUID_ENVIRO)
+                || characteristic.getUuid().equals(WibiSmartGatt.getInstance().SPEC_DATA_CHAR_UUID_ENVIRO))
         {
             characteristicSetNotifyQueue.add(characteristic);
         }
@@ -535,19 +542,22 @@ public class BluetoothLeService extends Service {
                     weatherTi[i] = byteArray[i] & 0xFF;
                 }
                 thisSensorData.setWeatherEnviro(weatherTi);
-                float[] weather = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).parseWeatherEnviro(weatherTi);
+
+                float temperature = thisSensorData.getTemperatureEnviro();
+                float humidity = thisSensorData.getHumidityEnviro();
+                float pressure = thisSensorData.getPressureEnviro();
                 /*if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (weather[0] != 0 || weather[1] != 0 || weather[2] != 0)) {
                     String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'temperature' : '" + weather[0] + "', 'pressure' : '" + weather[1] + "', 'humidity' : '" + weather[2] + "' }}";
                     Log.d(TAG, "publishing weather for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
                     MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicAir(), message);
                 }*/
-                if((transmitToCloud || storingLocally) && (weather[0] != 0 || weather[1] != 0 || weather[2] != 0)) {
+                if((transmitToCloud || storingLocally) && (temperature != 0 || pressure != 0 || humidity != 0)) {
                     Map<String, Object> body = new HashMap<String, Object>();
                     Map<String, Object> data = new HashMap<String, Object>();
                     Map<String, Object> d = new HashMap<String, Object>();
-                    d.put("temperature", weather[0]);
-                    d.put("pressure", weather[1]);
-                    d.put("humidity", weather[2]);
+                    d.put("temperature", temperature);
+                    d.put("pressure", pressure);
+                    d.put("humidity", humidity);
                     data.put("d", d);
                     body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
                     body.put("localName", gatt.getDevice().getName());
@@ -578,19 +588,22 @@ public class BluetoothLeService extends Service {
                     accelerometerDatati[i] = byteArray[i];
                 }
                 thisSensorData.setAccelerometer(accelerometerDatati);
-                float[] accelerometerData = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).parseAccelerometer(accelerometerDatati);
+
+                float X = thisSensorData.getAccelerometerX();
+                float Y = thisSensorData.getAccelerometerY();
+                float Z = thisSensorData.getAccelerometerZ();
                 /*if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (accelerometerData[0] != 0 || accelerometerData[1] != 0 || accelerometerData[2] != 0)) {
                     String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'x' : '" + accelerometerData[0] + "', 'y' : '" + accelerometerData[1] + "', 'z' : '" + accelerometerData[2] + "' }}";
                     Log.d(TAG, "publishing accel for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
                     MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicAccel(), message);
                 }*/
-                if ((transmitToCloud || storingLocally) && (accelerometerData[0] != 0 || accelerometerData[1] != 0 || accelerometerData[2] != 0)) {
+                if ((transmitToCloud || storingLocally) && (X != 0 || Y != 0 || Z != 0)) {
                     Map<String, Object> body = new HashMap<String, Object>();
                     Map<String, Object> data = new HashMap<String, Object>();
                     Map<String, Object> d = new HashMap<String, Object>();
-                    d.put("x", accelerometerData[0]);
-                    d.put("y", accelerometerData[1]);
-                    d.put("z", accelerometerData[2]);
+                    d.put("x", X);
+                    d.put("y", Y);
+                    d.put("z", Z);
                     data.put("d", d);
                     body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
                     body.put("localName", gatt.getDevice().getName());
@@ -607,7 +620,7 @@ public class BluetoothLeService extends Service {
             } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().LIGHT_DATA_CHAR_UUID_ENVIRO)) {
                 thisSensorData.setLightLevel(byteArray);
 
-                int lightLevel = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).parseLightLevel(byteArray);
+                int lightLevel = thisSensorData.getLightEnviro();
                 /*if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && lightLevel != 0) {
                     String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'light' : '" + lightLevel + "' }}";
                     Log.d(TAG, "publishing light for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
@@ -635,6 +648,54 @@ public class BluetoothLeService extends Service {
                 thisSensorData.setAccelerometer(byteArray);
             } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_DATA_CHAR_UUID_ENVIRO)) {
                 thisSensorData.setCO2Enviro(byteArray);
+
+                int CO2 = thisSensorData.getCO2Enviro();
+                if ((transmitToCloud || storingLocally) && CO2 != 0) {
+                    Map<String, Object> body = new HashMap<String, Object>();
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    Map<String, Object> d = new HashMap<String, Object>();
+                    d.put("CO2", CO2);
+                    data.put("d", d);
+                    body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
+                    body.put("localName", gatt.getDevice().getName());
+                    body.put("eventType", "CO2");
+                    body.put("timestamp", getCurrentGMTTime());
+                    body.put("data", data);
+                    if(storingLocally) {
+                        DataHandler.getInstance().storeObject(body);
+                    }
+                    if(transmitToCloud) {
+                        DataHandler.getInstance().pushOneFile(body);
+                    }
+                }
+            } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().SPEC_DATA_CHAR_UUID_ENVIRO)) {
+                thisSensorData.setGases(byteArray);
+
+                int SO2 = thisSensorData.getSO2Enviro();
+                int CO = thisSensorData.getCOEnviro();
+                int O3 = thisSensorData.getO3Enviro();
+                int NO2 = thisSensorData.getNO2Enviro();
+                if ((transmitToCloud || storingLocally) && (SO2 != 0 || CO != 0 || O3 != 0 || NO2 != 0)) {
+                    Map<String, Object> body = new HashMap<String, Object>();
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    Map<String, Object> d = new HashMap<String, Object>();
+                    d.put("SO2", SO2);
+                    d.put("CO", CO);
+                    d.put("O3", O3);
+                    d.put("NO2", NO2);
+                    data.put("d", d);
+                    body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
+                    body.put("localName", gatt.getDevice().getName());
+                    body.put("eventType", "gases");
+                    body.put("timestamp", getCurrentGMTTime());
+                    body.put("data", data);
+                    if(storingLocally) {
+                        DataHandler.getInstance().storeObject(body);
+                    }
+                    if(transmitToCloud) {
+                        DataHandler.getInstance().pushOneFile(body);
+                    }
+                }
             } else {
                 updateSettingsValue(characteristic);
             }

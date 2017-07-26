@@ -256,7 +256,7 @@ public class DataHandler {
         @Override
         protected void onPostExecute(HashMap<String,String> out) {
             HistoricalDashboardActivity historicalDashboardActivity = HistoricalDashboardActivity.getInstance();
-            historicalDashboardActivity.dataReady("weather", out);
+            historicalDashboardActivity.dataReady("weather/CO2", out);
         }
 
         @Override
@@ -283,12 +283,13 @@ public class DataHandler {
                 results.put("light", "");
                 return results;
             }
-            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"$or\" : [{\"eventType\" : \"battery\"}, {\"eventType\" : \"health\"}] },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
+            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"$or\" : [{\"eventType\" : \"battery\"}, {\"eventType\" : \"health\"}, {\"eventType\" : \"gases\"}] },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
             Log.d(TAG, "QueryWithIndexTask battery/light retrieved " + out.size() + " data points.");
             HashMap<String, String> results = new HashMap<String, String>();
             results.put("battery", "");
             results.put("light", "");
+            results.put("gases", "");
             int size = out.size();
             int inc = size/25;
             boolean done = false;
@@ -312,6 +313,9 @@ public class DataHandler {
                     case "health":
                         addDataPointToCSVString(thisMap, tempMap, results, "light", "light");
                         break;
+                    case "gases":
+                        String[] specialLabels = {"SO2", "CO", "O3", "NO2"};
+                        addDataPointToCSVString(thisMap, tempMap, results, "gases", specialLabels);
                     default:
                         break;
                 }
@@ -322,7 +326,7 @@ public class DataHandler {
         @Override
         protected void onPostExecute(HashMap<String,String> out) {
             HistoricalDashboardActivity historicalDashboardActivity = HistoricalDashboardActivity.getInstance();
-            historicalDashboardActivity.dataReady("battery/light", out);
+            historicalDashboardActivity.dataReady("battery/light/gases", out);
         }
 
         @Override

@@ -35,6 +35,10 @@ public class SensorData {
     private float humidityEnviro = 0;
 
     private int CO2Enviro = 0;
+    private int SO2Enviro = 0;
+    private int COEnviro = 0;
+    private int O3Enviro = 0;
+    private int NO2Enviro = 0;
 
     private float accelerometerX = 0;
     private float accelerometerY = 0;
@@ -51,16 +55,22 @@ public class SensorData {
     private boolean weatherSensorOn = false;
     private boolean lightSensorOn = false;
     private boolean CO2SensorOn = false;
+    private boolean SO2SensorOn = false;
+    private boolean COSensorOn = false;
+    private boolean O3SensorOn = false;
+    private boolean NO2SensorOn = false;
 
     private boolean hasAccelSensor = false;
     private boolean hasWeatherSensor = false;
     private boolean hasLightSensor = false;
     private boolean hasCO2Sensor = false;
+    private boolean hasGasesSensor = false;
 
     private int lastAccelPeriod = 5;
     private int lastLightPeriod = 10;
     private int lastWeatherPeriod = 50;
     private int lastCO2Period = 50;
+    private int lastGasesPeriod = 150;
 
     public char[] modelNumberString = {0};
 
@@ -88,20 +98,11 @@ public class SensorData {
         humidityEnviro = Math.round(((float)(weather[8] * 0x10000 + weather[7] * 0x100 + weather[6])) / (float)Math.pow(2, 10) * 10 * 10)/10f;
     }
 
-    public float[] parseWeatherEnviro(int[] weather) {
-        float[] weatherOut = new float[3];
-        weatherOut[0] = Math.round((float)(weather[2] * 0x10000 + weather[1] * 0x100 + weather[0]) / 100 * 10)/10f;
-        weatherOut[1] = Math.round((float)(weather[5] * 0x10000 + weather[4] * 0x100 + weather[3]) / 100 * 10)/10f;
-        weatherOut[2] = Math.round(((float)(weather[8] * 0x10000 + weather[7] * 0x100 + weather[6])) / (float)Math.pow(2, 10) * 10 * 10)/10f;
-
-        return weatherOut;
-    }
 
     public void setCO2Enviro(byte[] CO2)
     {
         //Log.d("CO222", CO2.length+"");
-        Log.d("CO222", CO2[0]+ " "+ CO2[1]+ " "+ CO2[2]+ " "+ CO2[3]+ " "+ CO2[4]+ " "+ CO2[4]+ " "+ CO2[5]+ " "+ CO2[6]+ " "+ CO2[7]+ " "+ CO2[8]+ " "+ CO2[9]+ " "+ CO2[10]+ " "+ CO2[11]+ " "+ CO2[12]+ " "+ CO2[13]+ " "+ CO2[14]+ " "+ CO2[15]);
-        if (CO2[0] != 0 && CO2[1] != 0)
+        //Log.d("CO222", CO2[0]+ " "+ CO2[1]+ " "+ CO2[2]+ " "+ CO2[3]+ " "+ CO2[4]+ " "+ CO2[4]+ " "+ CO2[5]+ " "+ CO2[6]+ " "+ CO2[7]+ " "+ CO2[8]+ " "+ CO2[9]+ " "+ CO2[10]+ " "+ CO2[11]+ " "+ CO2[12]+ " "+ CO2[13]+ " "+ CO2[14]+ " "+ CO2[15]);
         CO2Enviro = Math.round(((int)((CO2[3]-48) * 10000 + (CO2[4]-48)*1000 + (CO2[5]-48)*100 + (CO2[6]-48)*10 + (CO2[7]-48))) * 10)/10;
     }
 
@@ -112,13 +113,12 @@ public class SensorData {
         accelerometerZ = Math.round((float)(accelerometerData[5] * 0x100 + accelerometerData[4]) * 0.488f * 10)/10f;
     }
 
-    public float[] parseAccelerometer(byte[] accelerometerData) {
-        float[] accelerometerDataOut = new float[3];
-        accelerometerDataOut[0] = Math.round((float)(accelerometerData[1] * 0x100 + (char)(accelerometerData[0] & 0xFF)) * 0.488f * 10)/10f;
-        accelerometerDataOut[1] = Math.round((float)(accelerometerData[3] * 0x100 + accelerometerData[2]) * 0.488f * 10)/10f;
-        accelerometerDataOut[2] = Math.round((float)(accelerometerData[5] * 0x100 + accelerometerData[4]) * 0.488f * 10)/10f;
 
-        return accelerometerDataOut;
+    public void setGases(byte[] gasesData) {
+        SO2Enviro = (int) Math.round(((Integer.parseInt(gasesData[7] + "" + gasesData[6] + "" + gasesData[5] + "" + gasesData[4], 16) * Math.pow(10, -6)) - 1.25)/0.0045852);
+        COEnviro = (int) Math.round(((Integer.parseInt(gasesData[7] + "" + gasesData[6] + "" + gasesData[5] + "" + gasesData[4], 16) * Math.pow(10, -6)) - 1.25)/0.0008940);
+        O3Enviro = (int) Math.round(((Integer.parseInt(gasesData[7] + "" + gasesData[6] + "" + gasesData[5] + "" + gasesData[4], 16) * Math.pow(10, -6)) - 1.25)/-0.0055475);
+        NO2Enviro = (int) Math.round(((Integer.parseInt(gasesData[7] + "" + gasesData[6] + "" + gasesData[5] + "" + gasesData[4], 16) * Math.pow(10, -6)) - 1.25)/-0.0165620);
     }
 
     public void setBatteryLevel(int battery)
@@ -129,10 +129,6 @@ public class SensorData {
     public void setLightLevel(byte[] byteArray)
     {
         lightLevel = ((char)(byteArray[1] & 0xFF) * 0x100 + (char)(byteArray[0] & 0xFF));
-    }
-
-    public int parseLightLevel(byte[] byteArray) {
-        return ((char)(byteArray[1] & 0xFF) * 0x100 + (char)(byteArray[0] & 0xFF));
     }
 
     public int getBeaconType() { return beaconType; }
@@ -183,6 +179,14 @@ public class SensorData {
 
     public int getCO2Enviro() { return CO2Enviro; }
 
+    public int getSO2Enviro() { return SO2Enviro; }
+
+    public int getCOEnviro() { return COEnviro; }
+
+    public int getO3Enviro() { return O3Enviro; }
+
+    public int getNO2Enviro() { return NO2Enviro; }
+
     public int getBatteryLevel()
     {
         return batteryLevel;
@@ -230,6 +234,22 @@ public class SensorData {
 
     public void setCO2SensorOn(boolean b) { CO2SensorOn = b; }
 
+    public boolean getSO2SensorOn() { return SO2SensorOn; }
+
+    public void setSO2SensorOn(boolean b) { SO2SensorOn = b; }
+
+    public boolean getCOSensorOn() { return COSensorOn; }
+
+    public void setCOSensorOn(boolean b) { COSensorOn = b; }
+
+    public boolean getO3SensorOn() { return O3SensorOn; }
+
+    public void setO3SensorOn(boolean b) { O3SensorOn = b; }
+
+    public boolean getNO2SensorOn() { return NO2SensorOn; }
+
+    public void setNO2SensorOn(boolean b) { NO2SensorOn = b; }
+
     public boolean getHasAccelSensor() { return hasAccelSensor; }
 
     public void setHasAccelSensor(boolean b) { hasAccelSensor = b; }
@@ -246,6 +266,10 @@ public class SensorData {
 
     public void setHasCO2Sensor(boolean b) { hasCO2Sensor = b; }
 
+    public boolean getHasGasesSensor() { return hasGasesSensor; }
+
+    public void setHasGasesSensor(boolean b) { hasGasesSensor = b; }
+
     public int getLastAccelPeriod() { return lastAccelPeriod; }
 
     public void setLastAccelPeriod(int d) { lastAccelPeriod = d; }
@@ -261,6 +285,10 @@ public class SensorData {
     public int getLastCO2Period() { return lastCO2Period; }
 
     public void setLastCO2Period(int d) { lastCO2Period = d; }
+
+    public int getLastGasesPeriod() { return lastGasesPeriod; }
+
+    public void setLastGasesPeriod(int d) { lastGasesPeriod = d; }
 
 
 

@@ -205,6 +205,7 @@ public class FragmentDashboardEnviro extends Fragment {
             boolean weatherSevice = false;
             boolean CO2Service = false;
             boolean accelerometerService = false;
+            boolean gasesService = false;
             if (cardViewCO2 != null) {
                 cardViewCO2.setVisibility(View.VISIBLE);
                 cardViewTemperature.setVisibility(View.VISIBLE);
@@ -227,11 +228,14 @@ public class FragmentDashboardEnviro extends Fragment {
                     sensor.setHasAccelSensor(true);
                 } else if (tempService.getUuid().toString().equals(gatt.LIGHT_SERVICE_UUID_ENVIRO.toString())) {
                     sensor.setHasLightSensor(true);
+                } else if (tempService.getUuid().toString().equals(gatt.SPEC_SERVICE_UUID_ENVIRO.toString())) {
+                    sensor.setHasGasesSensor(true);
+                    gasesService = true;
                 }
 
             }
 
-            Log.d(TAG, ".hideSensors() Results for device " + MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getLocalName() + ": { accel: " + accelerometerService + ", weather:" + weatherSevice + ", CO2:" + CO2Service + "}");
+            Log.d(TAG, ".hideSensors() Results for device " + MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getLocalName() + ": { accel: " + accelerometerService + ", weather:" + weatherSevice + ", gases:" + gasesService + ", CO2:" + CO2Service + "}");
 
             if (!CO2Service && cardViewCO2 != null) {
                 cardViewCO2.setVisibility(View.GONE);

@@ -62,7 +62,7 @@ android:key="preferenceScreenEnviro">
 
         <CheckBoxPreference
             android:title="On/Off"
-            android:summary="Set the sensor on or off"
+            android:summary="Set the CO2 sensor on or off"
             android:key="CO2_checkbox_enviro"/>
 
         <wibicom.wibeacon3.SliderDialog
@@ -71,6 +71,40 @@ android:key="preferenceScreenEnviro">
             android:dialogMessage="Set the refreshing rate of the CO2 sensor"
             android:dialogTitle="Set sensor period"
             android:key="CO2_period_enviro" />
+
+    </PreferenceCategory>
+
+
+    <PreferenceCategory
+        android:key="preferenceCatergoryGases"
+        android:title="Gases sensor">
+
+        <CheckBoxPreference
+            android:title="On/Off (SO2)"
+            android:summary="Set the SO2 sensor on or off"
+            android:key="SO2_checkbox_enviro"/>
+
+        <CheckBoxPreference
+            android:title="On/Off (CO)"
+            android:summary="Set the CO sensor on or off"
+            android:key="CO_checkbox_enviro"/>
+
+        <CheckBoxPreference
+            android:title="On/Off (O3)"
+            android:summary="Set the sensor on or off"
+            android:key="O3_checkbox_enviro"/>
+
+        <CheckBoxPreference
+            android:title="On/Off (NO2)"
+            android:summary="Set the NO2 sensor on or off"
+            android:key="NO2_checkbox_enviro"/>
+
+        <wibicom.wibeacon3.SliderDialog
+            android:title="Period"
+            android:summary="Set the refreshing rate of the sensor"
+            android:dialogMessage="Set the refreshing rate of the gases sensor"
+            android:dialogTitle="Set sensor period"
+            android:key="gases_period_enviro" />
 
     </PreferenceCategory>
 

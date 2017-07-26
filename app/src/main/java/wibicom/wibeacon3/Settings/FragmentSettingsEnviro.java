@@ -87,288 +87,277 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         Preference pref = findPreference(key);
         SensorData sensor = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition());
 
-        if(key.equals("android_device_mac_address"))
-        {
-            EditTextPreference editTextPreference = (EditTextPreference)pref;
-            String androidDeviceId = editTextPreference.getText();
-            pref.setSummary(androidDeviceId);
-            MqttHandler.getInstance(MainActivity.getInstance()).setDeviceId(androidDeviceId);
-            attemptIoTConnection();
+        switch (key) {
+            case "android_device_mac_address": {
+                EditTextPreference editTextPreference = (EditTextPreference) pref;
+                String androidDeviceId = editTextPreference.getText();
+                pref.setSummary(androidDeviceId);
+                MqttHandler.getInstance(MainActivity.getInstance()).setDeviceId(androidDeviceId);
+                attemptIoTConnection();
+                break;
+            }
+            case "iot_auth_token": {
+                EditTextPreference editTextPreference = (EditTextPreference) pref;
+                String authToken = editTextPreference.getText();
+                pref.setSummary(authToken);
+                MqttHandler.getInstance(MainActivity.getInstance()).setAuthentificationToken(authToken);
+                attemptIoTConnection();
+                break;
+            }
+            case "accelerometer_checkbox_enviro": {
+                if (!nonManualAccelCheckBoxChange) {
+                    CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
+                    byte value[] = {0x00};
+                    if (checkBoxPreference.isChecked())
+                        value[0] = 0x01;
 
-        }
-        else if(key.equals("iot_auth_token"))
-        {
-            EditTextPreference editTextPreference = (EditTextPreference)pref;
-            String authToken = editTextPreference.getText();
-            pref.setSummary(authToken);
-            MqttHandler.getInstance(MainActivity.getInstance()).setAuthentificationToken(authToken);
-            attemptIoTConnection();
-        }
-        else if(key.equals("accelerometer_checkbox_enviro"))
-        {
-            if(!nonManualAccelCheckBoxChange) {
-                CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
-                byte value[] = {0x00};
-                if (checkBoxPreference.isChecked())
-                    value[0] = 0x01;
-
-                sensor.setAccelSensorOn(value[0] == 1);
-                UUID uuid = WibiSmartGatt.getInstance().ACCELEROMETER_CONF_CHAR_UUID_ENVIRO;
-                Log.d(TAG, "accel checkbox toggled to " + value[0]);
-                if (sensor.getHasAccelSensor()) {
+                    sensor.setAccelSensorOn(value[0] == 1);
+                    UUID uuid = WibiSmartGatt.getInstance().ACCELEROMETER_CONF_CHAR_UUID_ENVIRO;
+                    Log.d(TAG, "accel checkbox toggled to " + value[0]);
+                    if (sensor.getHasAccelSensor()) {
+                        mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                nonManualAccelCheckBoxChange = false;
+                break;
+            }
+            case "accelerometer_period_enviro": {
+                SliderDialog sliderPref = (SliderDialog) pref;
+                Integer period = sliderPref.getSliderValue();
+                Log.d(TAG, "accel period changed to " + period);
+                byte value[] = {period.byteValue()};
+                UUID uuid = WibiSmartGatt.getInstance().ACCELEROMETER_PERIOD_CHAR_UUID_ENVIRO;
+                if (!nonManualAccelPeriodChange && sensor.getHasAccelSensor()) {
                     mListener.writeCharacteristic(uuid, value);
+                    sensor.setLastAccelPeriod(period);
                 }
+                nonManualAccelPeriodChange = false;
+                period = period * 100;
+                pref.setSummary(period + " milliseconds");
+                break;
             }
-            nonManualAccelCheckBoxChange = false;
-        }
-        else if(key.equals("accelerometer_period_enviro"))
-        {
-            SliderDialog sliderPref = (SliderDialog)pref;
-            Integer period = sliderPref.getSliderValue();
-            Log.d(TAG, "accel period changed to " + period);
-            byte value[] = {period.byteValue()};
-            UUID uuid = WibiSmartGatt.getInstance().ACCELEROMETER_PERIOD_CHAR_UUID_ENVIRO;
-            if(!nonManualAccelPeriodChange && sensor.getHasAccelSensor()) {
-                mListener.writeCharacteristic(uuid, value);
-                sensor.setLastAccelPeriod(period);
+            case "weather_checkbox_enviro": {
+                if (!nonManualWeatherCheckBoxChange) {
+                    CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
+                    byte value[] = {0x00};
+                    if (checkBoxPreference.isChecked())
+                        value[0] = 0x01;
+
+                    sensor.setWeatherSensorOn(value[0] == 1);
+                    UUID uuid = WibiSmartGatt.getInstance().WEATHER_CONF_CHAR_UUID_ENVIRO;
+                    Log.d(TAG, "weather checkbox toggled to " + value[0]);
+                    if (sensor.getHasWeatherSensor()) {
+                        mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                nonManualWeatherCheckBoxChange = false;
+                break;
             }
-
-            period = period*100;
-            pref.setSummary(period + " milliseconds");
-        }
-        else if(key.equals("weather_checkbox_enviro"))
-        {
-            if(!nonManualWeatherCheckBoxChange) {
-                CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
-                byte value[] = {0x00};
-                if (checkBoxPreference.isChecked())
-                    value[0] = 0x01;
-
-                sensor.setWeatherSensorOn(value[0] == 1);
-                UUID uuid = WibiSmartGatt.getInstance().WEATHER_CONF_CHAR_UUID_ENVIRO;
-                Log.d(TAG, "weather checkbox toggled to " + value[0]);
-                if (sensor.getHasWeatherSensor()) {
+            case "weather_period_enviro": {
+                SliderDialog sliderPref = (SliderDialog) pref;
+                Integer period = sliderPref.getSliderValue();
+                Log.d(TAG, "weather period changed to " + period);
+                byte value[] = {period.byteValue()};
+                UUID uuid = WibiSmartGatt.getInstance().WEATHER_PERIOD_CHAR_UUID_ENVIRO;
+                if (!nonManualWeatherPeriodChange && sensor.getHasWeatherSensor()) {
                     mListener.writeCharacteristic(uuid, value);
+                    sensor.setLastWeatherPeriod(period);
                 }
+                nonManualWeatherPeriodChange = false;
+                period = period * 100;
+                pref.setSummary(period + " milliseconds");
+                break;
             }
-            nonManualWeatherCheckBoxChange = false;
-        }
-        else if(key.equals("weather_period_enviro"))
-        {
-            SliderDialog sliderPref = (SliderDialog)pref;
-            Integer period = sliderPref.getSliderValue();
-            Log.d(TAG, "weather period changed to " + period);
-            byte value[] = {period.byteValue()};
-            UUID uuid = WibiSmartGatt.getInstance().WEATHER_PERIOD_CHAR_UUID_ENVIRO;
-            if(!nonManualWeatherPeriodChange && sensor.getHasWeatherSensor()) {
-                mListener.writeCharacteristic(uuid, value);
-                sensor.setLastWeatherPeriod(period);
-            }
-            period = period*100;
-            pref.setSummary(period + " milliseconds");
-        }
-        else if(key.equals("light_checkbox_enviro"))
-        {
-            if(!nonManualLightCheckBoxChange) {
-                CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
-                byte value[] = {0x00};
-                if (checkBoxPreference.isChecked())
-                    value[0] = 0x01;
+            case "light_checkbox_enviro": {
+                if (!nonManualLightCheckBoxChange) {
+                    CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
+                    byte value[] = {0x00};
+                    if (checkBoxPreference.isChecked())
+                        value[0] = 0x01;
 
-                sensor.setLighgtSensorOn(value[0] == 1);
-                UUID uuid = WibiSmartGatt.getInstance().LIGHT_CONF_CHAR_UUID_ENVIRO;
-                Log.d(TAG, "light checkbox toggled to " + value[0]);
-                if (sensor.getHasLightSensor()) {
+                    sensor.setLighgtSensorOn(value[0] == 1);
+                    UUID uuid = WibiSmartGatt.getInstance().LIGHT_CONF_CHAR_UUID_ENVIRO;
+                    Log.d(TAG, "light checkbox toggled to " + value[0]);
+                    if (sensor.getHasLightSensor()) {
+                        mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                nonManualLightCheckBoxChange = false;
+                break;
+            }
+            case "light_period_enviro": {
+                SliderDialog sliderPref = (SliderDialog) pref;
+                Integer period = sliderPref.getSliderValue();
+                Log.d(TAG, "light period changed to " + period);
+                byte value[] = {period.byteValue()};
+                UUID uuid = WibiSmartGatt.getInstance().LIGHT_PERIOD_CHAR_UUID_ENVIRO;
+                if (!nonManualLightPeriodChange && sensor.getHasLightSensor()) {
                     mListener.writeCharacteristic(uuid, value);
+                    sensor.setLastLightPeriod(period);
                 }
+                nonManualLightPeriodChange = false;
+                period = period * 100;
+                pref.setSummary(period + " milliseconds");
+                break;
             }
-            nonManualLightCheckBoxChange = false;
-        }
-        else if(key.equals("light_period_enviro"))
-        {
-            SliderDialog sliderPref = (SliderDialog)pref;
-            Integer period = sliderPref.getSliderValue();
-            Log.d(TAG, "light period changed to " + period);
-            byte value[] = {period.byteValue()};
-            UUID uuid = WibiSmartGatt.getInstance().LIGHT_PERIOD_CHAR_UUID_ENVIRO;
-            if(!nonManualLightPeriodChange && sensor.getHasLightSensor()) {
-                mListener.writeCharacteristic(uuid, value);
-                sensor.setLastLightPeriod(period);
-            }
-            period = period*100;
-            pref.setSummary(period + " milliseconds");
-        }
-        else if(key.equals("CO2_checkbox_enviro"))
-        {
-            if(!nonManualCO2CheckboxChange) {
-                CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
-                byte value[] = {0x00};
-                if (checkBoxPreference.isChecked())
-                    value[0] = 0x01;
+            case "CO2_checkbox_enviro": {
+                if (!nonManualCO2CheckboxChange) {
+                    CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
+                    byte value[] = {0x00};
+                    if (checkBoxPreference.isChecked())
+                        value[0] = 0x01;
 
-                sensor.setCO2SensorOn(value[0] == 1);
-                UUID uuid = WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO;
-                Log.d(TAG, "CO2 checkbox toggled to " + value[0]);
-                if (sensor.getHasCO2Sensor()) {
+                    sensor.setCO2SensorOn(value[0] == 1);
+                    UUID uuid = WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO;
+                    Log.d(TAG, "CO2 checkbox toggled to " + value[0]);
+                    if (sensor.getHasCO2Sensor()) {
+                        mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                nonManualCO2CheckboxChange = false;
+                break;
+            }
+            case "CO2_period_enviro": {
+                SliderDialog sliderPref = (SliderDialog) pref;
+                Integer period = sliderPref.getSliderValue();
+                Log.d(TAG, "CO2 period changed to " + period);
+                byte value[] = {period.byteValue()};
+                UUID uuid = WibiSmartGatt.getInstance().CO2_PEROÏOD_CHAR_UUID_ENVIRO;
+                if (!nonManualCO2PeriodChange && sensor.getHasCO2Sensor()) {
                     mListener.writeCharacteristic(uuid, value);
+                    sensor.setLastCO2Period(period);
                 }
+                nonManualCO2PeriodChange = false;
+                period = period * 100;
+                pref.setSummary(period + " milliseconds");
+                break;
             }
-            nonManualCO2CheckboxChange = false;
-        }
-        else if(key.equals("CO2_checkbox_enviro"))
-        {
-            if(!nonManualCO2CheckboxChange) {
-                CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
-                byte value[] = {0x00};
-                if (checkBoxPreference.isChecked())
-                    value[0] = 0x01;
+            case "SO2_checkbox_enviro": {
+                if (!nonManualSO2CheckBoxChange) {
+                    CheckBoxPreference checkBoxPreferenceSO2 = (CheckBoxPreference) pref;
+                    byte value[] = {0};
 
-                sensor.setCO2SensorOn(value[0] == 1);
-                UUID uuid = WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO;
-                Log.d(TAG, "CO2 checkbox toggled to " + value[0]);
-                if (sensor.getHasCO2Sensor()) {
+                    if (getSO2Checkbox()) {
+                        value[0] += 1;
+                    }
+                    if (getCOCheckbox()) {
+                        value[0] += 2;
+                    }
+                    if (getO3Checkbox()) {
+                        value[0] += 4;
+                    }
+                    if (getNO2Checkbox()) {
+                        value[0] += 8;
+                    }
+                    sensor.setSO2SensorOn(checkBoxPreferenceSO2.isChecked());
+                    UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
+                    Log.d(TAG, "SO2 checkbox toggled to " + value[0]);
+                    if (sensor.getHasGasesSensor()) {
+                        mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                nonManualSO2CheckBoxChange = false;
+                break;
+            }
+            case "CO_checkbox_enviro": {
+                if (!nonManualCOCheckBoxChange) {
+                    CheckBoxPreference checkBoxPreferenceCO = (CheckBoxPreference) pref;
+                    byte value[] = {0};
+
+                    if (getSO2Checkbox()) {
+                        value[0] += 1;
+                    }
+                    if (getCOCheckbox()) {
+                        value[0] += 2;
+                    }
+                    if (getO3Checkbox()) {
+                        value[0] += 4;
+                    }
+                    if (getNO2Checkbox()) {
+                        value[0] += 8;
+                    }
+                    sensor.setSO2SensorOn(checkBoxPreferenceCO.isChecked());
+                    UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
+                    Log.d(TAG, "CO checkbox toggled to " + value[0]);
+                    if (sensor.getHasGasesSensor()) {
+                        mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                nonManualCOCheckBoxChange = false;
+                break;
+            }
+            case "O3_checkbox_enviro": {
+                if (!nonManualO3CheckBoxChange) {
+                    CheckBoxPreference checkBoxPreferenceO3 = (CheckBoxPreference) pref;
+                    byte value[] = {0};
+
+                    if (getSO2Checkbox()) {
+                        value[0] += 1;
+                    }
+                    if (getCOCheckbox()) {
+                        value[0] += 2;
+                    }
+                    if (getO3Checkbox()) {
+                        value[0] += 4;
+                    }
+                    if (getNO2Checkbox()) {
+                        value[0] += 8;
+                    }
+                    sensor.setSO2SensorOn(checkBoxPreferenceO3.isChecked());
+                    UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
+                    Log.d(TAG, "O3 checkbox toggled to " + value[0]);
+                    if (sensor.getHasGasesSensor()) {
+                        mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                nonManualO3CheckBoxChange = false;
+                break;
+            }
+            case "NO2_checkbox_enviro": {
+                if (!nonManualNO2CheckBoxChange) {
+                    CheckBoxPreference checkBoxPreferenceNO2 = (CheckBoxPreference) pref;
+                    byte value[] = {0};
+
+                    if (getSO2Checkbox()) {
+                        value[0] += 1;
+                    }
+                    if (getCOCheckbox()) {
+                        value[0] += 2;
+                    }
+                    if (getO3Checkbox()) {
+                        value[0] += 4;
+                    }
+                    if (getNO2Checkbox()) {
+                        value[0] += 8;
+                    }
+                    sensor.setSO2SensorOn(checkBoxPreferenceNO2.isChecked());
+                    UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
+                    Log.d(TAG, "NO2 checkbox toggled to " + value[0]);
+                    if (sensor.getHasGasesSensor()) {
+                        mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                nonManualNO2CheckBoxChange = false;
+                break;
+            }
+            case "gases_period_enviro": {
+                SliderDialog sliderPref = (SliderDialog) pref;
+                Integer period = sliderPref.getSliderValue();
+                Log.d(TAG, "gases period changed to " + period);
+                byte value[] = {period.byteValue()};
+                UUID uuid = WibiSmartGatt.getInstance().SPEC_PEROÏOD_CHAR_UUID_ENVIRO;
+                if (!nonManualGasesPeriodChange && sensor.getHasGasesSensor()) {
                     mListener.writeCharacteristic(uuid, value);
+                    sensor.setLastGasesPeriod(period);
                 }
+                nonManualGasesPeriodChange = false;
+                period = period * 100;
+                pref.setSummary(period + " milliseconds");
+                break;
             }
-            nonManualCO2CheckboxChange = false;
-        }
-        else if(key.equals("CO2_period_enviro"))
-        {
-            SliderDialog sliderPref = (SliderDialog)pref;
-            Integer period = sliderPref.getSliderValue();
-            Log.d(TAG, "CO2 period changed to " + period);
-            byte value[] = {period.byteValue()};
-            UUID uuid = WibiSmartGatt.getInstance().CO2_PEROÏOD_CHAR_UUID_ENVIRO;
-            if(!nonManualCO2PeriodChange && sensor.getHasCO2Sensor()) {
-                mListener.writeCharacteristic(uuid, value);
-                sensor.setLastCO2Period(period);
-            }
+            default:
+                break;
 
-            period = period*100;
-            pref.setSummary(period + " milliseconds");
-        }
-        else if(key.equals("SO2_checkbox_enviro"))
-        {
-            if(!nonManualSO2CheckBoxChange) {
-                CheckBoxPreference checkBoxPreferenceSO2 = (CheckBoxPreference) pref;
-                byte value[] = {0};
-
-                if(getSO2Checkbox()) {
-                    value[0] += 1;
-                }
-                if(getCOCheckbox()) {
-                    value[0] += 2;
-                }
-                if(getO3Checkbox()) {
-                    value[0] += 4;
-                }
-                if(getNO2Checkbox()) {
-                    value[0] += 8;
-                }
-                sensor.setSO2SensorOn(checkBoxPreferenceSO2.isChecked());
-                UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
-                Log.d(TAG, "SO2 checkbox toggled to " + value[0]);
-                if (sensor.getHasGasesSensor()) {
-                    mListener.writeCharacteristic(uuid, value);
-                }
-            }
-            nonManualSO2CheckBoxChange = false;
-        }
-        else if(key.equals("CO_checkbox_enviro"))
-        {
-            if(!nonManualCOCheckBoxChange) {
-                CheckBoxPreference checkBoxPreferenceCO = (CheckBoxPreference) pref;
-                byte value[] = {0};
-
-                if(getSO2Checkbox()) {
-                    value[0] += 1;
-                }
-                if(getCOCheckbox()) {
-                    value[0] += 2;
-                }
-                if(getO3Checkbox()) {
-                    value[0] += 4;
-                }
-                if(getNO2Checkbox()) {
-                    value[0] += 8;
-                }
-                sensor.setSO2SensorOn(checkBoxPreferenceCO.isChecked());
-                UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
-                Log.d(TAG, "CO checkbox toggled to " + value[0]);
-                if (sensor.getHasGasesSensor()) {
-                    mListener.writeCharacteristic(uuid, value);
-                }
-            }
-            nonManualCOCheckBoxChange = false;
-        }
-        else if(key.equals("O3_checkbox_enviro"))
-        {
-            if(!nonManualO3CheckBoxChange) {
-                CheckBoxPreference checkBoxPreferenceO3 = (CheckBoxPreference) pref;
-                byte value[] = {0};
-
-                if(getSO2Checkbox()) {
-                    value[0] += 1;
-                }
-                if(getCOCheckbox()) {
-                    value[0] += 2;
-                }
-                if(getO3Checkbox()) {
-                    value[0] += 4;
-                }
-                if(getNO2Checkbox()) {
-                    value[0] += 8;
-                }
-                sensor.setSO2SensorOn(checkBoxPreferenceO3.isChecked());
-                UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
-                Log.d(TAG, "O3 checkbox toggled to " + value[0]);
-                if (sensor.getHasGasesSensor()) {
-                    mListener.writeCharacteristic(uuid, value);
-                }
-            }
-            nonManualO3CheckBoxChange = false;
-        }
-        else if(key.equals("NO2_checkbox_enviro"))
-        {
-            if(!nonManualNO2CheckBoxChange) {
-                CheckBoxPreference checkBoxPreferenceNO2 = (CheckBoxPreference) pref;
-                byte value[] = {0};
-
-                if(getSO2Checkbox()) {
-                    value[0] += 1;
-                }
-                if(getCOCheckbox()) {
-                    value[0] += 2;
-                }
-                if(getO3Checkbox()) {
-                    value[0] += 4;
-                }
-                if(getNO2Checkbox()) {
-                    value[0] += 8;
-                }
-                sensor.setSO2SensorOn(checkBoxPreferenceNO2.isChecked());
-                UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
-                Log.d(TAG, "NO2 checkbox toggled to " + value[0]);
-                if (sensor.getHasGasesSensor()) {
-                    mListener.writeCharacteristic(uuid, value);
-                }
-            }
-            nonManualNO2CheckBoxChange = false;
-        }
-        else if(key.equals("gases_period_enviro"))
-        {
-            SliderDialog sliderPref = (SliderDialog)pref;
-            Integer period = sliderPref.getSliderValue();
-            Log.d(TAG, "gases period changed to " + period);
-            byte value[] = {period.byteValue()};
-            UUID uuid = WibiSmartGatt.getInstance().SPEC_PEROÏOD_CHAR_UUID_ENVIRO;
-            if(!nonManualGasesPeriodChange && sensor.getHasGasesSensor()) {
-                mListener.writeCharacteristic(uuid, value);
-                sensor.setLastGasesPeriod(period);
-            }
-
-            period = period*100;
-            pref.setSummary(period + " milliseconds");
         }
     }
 

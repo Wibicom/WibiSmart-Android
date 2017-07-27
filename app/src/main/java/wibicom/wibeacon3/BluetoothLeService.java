@@ -383,7 +383,8 @@ public class BluetoothLeService extends Service {
                 addCharacteristicNotifyQueue(characteristic);
                 updateCharacteristicValue(gatt, characteristic);
             }
-
+            if(characteristic.getValue().length >0)
+                Log.d("yay", characteristic.getUuid() + " " + characteristic.getValue()[0]);
             // Read the next characteristic in the queue & broadcast when queue is empty.
             if(characteristicQueue.isEmpty())
             {

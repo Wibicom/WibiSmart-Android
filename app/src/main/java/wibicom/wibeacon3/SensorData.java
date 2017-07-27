@@ -66,9 +66,9 @@ public class SensorData {
     private boolean hasCO2Sensor = false;
     private boolean hasGasesSensor = false;
 
-    private int lastAccelPeriod = 5;
-    private int lastLightPeriod = 10;
-    private int lastWeatherPeriod = 50;
+    private int lastAccelPeriod = 10;
+    private int lastLightPeriod = 25;
+    private int lastWeatherPeriod = 36;
     private int lastCO2Period = 50;
     private int lastGasesPeriod = 150;
 

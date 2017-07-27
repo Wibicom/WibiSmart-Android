@@ -300,7 +300,7 @@ public class FragmentHistoricalDashboard extends Fragment {
         csv = csvMap.get("pressure");
         if(!csv.equals("")) {
             csv = "Timestamp,Pressure\\n"+csv;
-            webViewPressureGraph.loadUrl("javascript:render_graph('Pressure (mBar)', '" + csv + "')");
+            webViewPressureGraph.loadUrl("javascript:render_graph('Pressure (mbar)', '" + csv + "')");
             cardViewPressureGraph.setVisibility(View.VISIBLE);
         }
         csv = csvMap.get("CO2");

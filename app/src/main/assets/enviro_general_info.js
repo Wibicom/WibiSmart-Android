@@ -1,16 +1,16 @@
 function set_rssi(rssi){
     document.getElementById("rssi-indicator").innerHTML = rssi + " dBm";
     var bars;
-    if(rssi > -40) {
+    if(rssi > -50) {
         bars = 5;
     }
-    else if(rssi > -60) {
+    else if(rssi > -70) {
         bars = 4;
     }
     else if(rssi > -80) {
         bars = 3;
     }
-    else if(rssi > -100) {
+    else if(rssi > -95) {
         bars = 2
     }
     else {

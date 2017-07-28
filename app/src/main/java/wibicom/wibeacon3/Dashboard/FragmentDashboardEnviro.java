@@ -9,6 +9,7 @@ import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
@@ -74,7 +75,7 @@ public class FragmentDashboardEnviro extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_dashboard_enviro, container, false);
+        View view = inflater.inflate(R.layout.fragment_dashboard_enviro_min, container, false);
 //        temperatureText = (TextView) view.findViewById(R.id.weather_ti);
 //        humidityText = (TextView) view.findViewById(R.id.humidity_ti);
 //        pressureText = (TextView) view.findViewById(R.id.pressure_ti);
@@ -88,6 +89,12 @@ public class FragmentDashboardEnviro extends Fragment {
 
 
         webViewTemperature = (WebView) view.findViewById(R.id.webviewTemperature);
+        webViewTemperature.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return (event.getAction() == MotionEvent.ACTION_MOVE);
+            }
+        });
         webViewHumidity = (WebView) view.findViewById(R.id.webviewHumidity);
         webViewPressure = (WebView) view.findViewById(R.id.webviewPressure);
         webViewCO2 = (WebView) view.findViewById(R.id.webviewCO2);
@@ -103,9 +110,9 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewGeneralInfo.getSettings().setJavaScriptEnabled(true);
 
         // Load the html file
-        webViewTemperature.loadUrl("file:///android_asset/temperature_widget.html");
-        webViewHumidity.loadUrl("file:///android_asset/humidity_widget.html");
-        webViewPressure.loadUrl("file:///android_asset/pressure_widget.html");
+        webViewTemperature.loadUrl("file:///android_asset/temperature_widget_min.html");
+        webViewHumidity.loadUrl("file:///android_asset/humidity_widget_min.html");
+        webViewPressure.loadUrl("file:///android_asset/pressure_widget_min.html");
         webViewCO2.loadUrl("file:///android_asset/CO2_widget.html");
         webViewAccelerometer.loadUrl("file:///android_asset/accelerometer_widget.html");
         webViewGeneralInfo.loadUrl("file:///android_asset/enviro_general_info.html");

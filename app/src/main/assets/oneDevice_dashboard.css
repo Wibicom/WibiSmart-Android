@@ -22,6 +22,12 @@
     color: #424242;
 }
 
+.sensor-name-min{
+    font-weight: bold;
+    font-size: 15px;
+    color: #424242;
+}
+
 .sensor-name-white{
     font-weight: bold;
     font-size: 20px;
@@ -156,6 +162,12 @@
 .data-value{
     width: 100%;
     font-size: 17px;
+
+}
+
+.data-value-min{
+    width: 100%;
+    font-size: 14px;
 
 }
 

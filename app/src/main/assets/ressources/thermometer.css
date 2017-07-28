@@ -1,11 +1,11 @@
 
 #sa-thermometer {
   width: 100px;
-  height: 100px;
+  height: 90px;
 }
 #sa-thermometer .tube {
   width: 10px;
-  height: 66px;
+  height: 55px;
   background: #e5e3e3;
   -webkit-border-radius: 5px;
   border-radius: 5px;
@@ -27,7 +27,7 @@
 #sa-thermometer .liquid {
   background: #c41d1d;
   width: 7px;
-  margin-left: 2px;
+  margin-left: 1.5px;
   position: absolute;
   bottom: 2px;
   -webkit-border-radius: 5px;
@@ -38,7 +38,7 @@
   display: inline-block;
   position: relative;
   width: 17px;
-  height: 17px;
+  height: 16px;
   background: #c41d1d;
   -webkit-border-radius: 50%;
   border-radius: 50%;

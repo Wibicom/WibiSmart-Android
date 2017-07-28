@@ -39,7 +39,7 @@ var PressureGauge = (function () {
 
 function updatePressure(pressure)
 {
-    document.getElementById("pressurevalue").innerHTML = pressure + " mBar";
+    document.getElementById("pressurevalue").innerHTML = pressure + " mbar";
     PressureGauge.getInstance().set(pressure);
 }
 

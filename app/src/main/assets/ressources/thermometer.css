@@ -1,0 +1,48 @@
+
+#sa-thermometer {
+  width: 100px;
+  height: 100px;
+}
+#sa-thermometer .tube {
+  width: 10px;
+  height: 66px;
+  background: #e5e3e3;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  position: relative;
+}
+#sa-thermometer .tube:before {
+  content: '';
+  display: inline-block;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  background: #e5e3e3;
+  -webkit-border-radius: 50%;
+  border-radius: 50%;
+  margin-left: -5px;
+  position: absolute;
+  bottom: 0;
+}
+#sa-thermometer .liquid {
+  background: #c41d1d;
+  width: 7px;
+  margin-left: 2px;
+  position: absolute;
+  bottom: 2px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+}
+#sa-thermometer .liquid:after {
+  content: '';
+  display: inline-block;
+  position: relative;
+  width: 17px;
+  height: 17px;
+  background: #c41d1d;
+  -webkit-border-radius: 50%;
+  border-radius: 50%;
+  margin-left: -5px;
+  position: absolute;
+  bottom: 0;
+}

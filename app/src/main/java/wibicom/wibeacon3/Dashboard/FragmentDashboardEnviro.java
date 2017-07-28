@@ -108,7 +108,7 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewPressure.loadUrl("file:///android_asset/pressure_widget.html");
         webViewCO2.loadUrl("file:///android_asset/CO2_widget.html");
         webViewAccelerometer.loadUrl("file:///android_asset/accelerometer_widget.html");
-        webViewGeneralInfo.loadUrl("file:///android_asset/general_info_widget.html");
+        webViewGeneralInfo.loadUrl("file:///android_asset/enviro_general_info.html");
 
         // Display battery level if it was not created when updateData function was called
         //batteryLevelText.setText(Integer.toString(batteryLevel) + " %");
@@ -235,7 +235,7 @@ public class FragmentDashboardEnviro extends Fragment {
 
             }
 
-            Log.d(TAG, ".hideSensors() Results for device " + MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getLocalName() + ": { accel: " + accelerometerService + ", weather:" + weatherSevice + ", gases:" + gasesService + ", CO2:" + CO2Service + "}");
+            Log.d(TAG, ".hideSensors() Results for device " + MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getLocalName() + ": { accel: " + accelerometerService + ", weather:" + weatherSevice +", gases:" + gasesService + ", CO2:" + CO2Service + "}");
 
             if (!CO2Service && cardViewCO2 != null) {
                 cardViewCO2.setVisibility(View.GONE);

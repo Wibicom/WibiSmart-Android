@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <link href = "oneDevice_dashboard.css" rel="stylesheet">
+    <link href = "bootstrap.css" rel="stylesheet">
+    <link href = "ressources/battery.css" rel="stylesheet">
+    
+</head>
+<body>
+
+ 
+<div class="sensor-name" id="sensor-name-tag" style="margin-left:15px">Enviro</div>
+<div class="row" id="main">
+    <div class="col"><img src="img/Enviro1.png" alt="Enviro" style="width:90px;height:90px;margin-top:10px;margin-left:20px"></div>
+    <div class="col" style="text-align:center;margin-left:45px"><img src="img/signal5.png" id="rssiPic" style="height:24px; width:30px; position:relative; bottom:4px; right:2px">RSSI<div  class="count" id="rssi-indicator" style="font-weight: bold;">1.111</div></div>
+    <div class="col" style="text-align:center;margin-left:0px"><img src="img/sun.png" id="sun" style="height:24px; width:32px">Light<div class="count" id="light_indicator_bottom" style="font-weight: bold;">2.222</div></div>
+    <div class="col" style="text-align:center;margin-left:0px;"><div class="battery" style="position:relative; left:17%;"><div id="batteryLevel" class="level"></div></div><div class="count" id = "batteryvalue" style="font-weight: bold;">3.333</div></div>
+    <div class="last" />
+</div>
+
+
+<script src = "jquery-3.2.1.min.js"></script>
+<script src = "enviro_general_info.js"></script>
+<script src = "bootstrap.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <link href = "oneDevice_dashboard.css" rel="stylesheet">
+    <link href = "bootstrap.css" rel="stylesheet">
+</head>
+<body>
+
+<div class = "sensor-name-min" style="text-align:center; padding-top:5px">Pressure</div>
+
+<div class = "gauge-section" style="padding-top:0px; padding-bottom:10px; position:relative; bottom:20px">
+<label id = "pressurevalue" class = "data-value-min" style="position:relative; top:66px;"></label>
+<canvas id="pressuregauge" class = "gauge" height="40" width="90" ></canvas>
+</div>
+
+
+<script src = "jquery-3.2.1.min.js"></script>
+<script src = "bootstrap.js"></script>
+<script src = "gauge.min.js"></script>
+<script src = "pressure_widget.js"></script>
+
+</body>
+</html>

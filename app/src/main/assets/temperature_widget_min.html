@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <link href = "oneDevice_dashboard.css" rel="stylesheet">
+    <link href = "bootstrap.css" rel="stylesheet">
+    <link href = "ressources/thermometer.css" rel="stylesheet">
+</head>
+<body>
+
+<div class = "sensor-name-min" style="text-align:center; padding-top:5px;">Temperature</div>
+<div class="row" id="main">
+    
+    <div class="col" style="margin-left:25%; padding-top:5px;">
+        <div id="sa-thermometer">
+            <div class="tube">
+                <div class="liquid" id="liquidLevel" style="height:40%;">    </div>
+            </div>
+        </div>
+    </div>
+    <div class="col" style="text-align:center;margin-left:10%; padding-top:10px"><label id = "temperaturevalue" style="position:relative; right:25px;"class = "data-value-min">0°C</label></div>
+    <div class="last" />
+</div>
+
+
+<script src = "jquery-3.2.1.min.js"></script>
+<script src = "temperature_widget_min.js"></script>
+<script src = "bootstrap.js"></script>
+
+</body>
+</html>

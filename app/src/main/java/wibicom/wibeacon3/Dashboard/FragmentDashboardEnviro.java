@@ -138,7 +138,7 @@ public class FragmentDashboardEnviro extends Fragment {
         return view;
     }
 
-    public void updateData(String name, float temperature, float pressure, float humidity, float accelerometerX, float accelerometerY, float accelerometerZ, int batteryLevel, int rssi, int light, int CO2)
+    public void updateData(String name, float temperature, float pressure, float humidity, float accelerometerX, float accelerometerY, float accelerometerZ, int batteryLevel, int rssi, int light, int CO2, int SO2, int CO, int O3, int NO2)
     {
         //webViewTemperature.loadUrl("file:///android_asset/temperature_widget.html");
         //webViewTemperature.loadUrl("javascript:updateTemperature()");
@@ -160,6 +160,12 @@ public class FragmentDashboardEnviro extends Fragment {
         }
         if(webViewCO2 != null) {
             webViewCO2.loadUrl("javascript:updateCO2(" + Integer.toString(CO2) + ")");
+        }
+        if(webViewGases != null) {
+            webViewGases.loadUrl("javascript:updateSO2(" + Integer.toString(SO2) + ")");
+            webViewGases.loadUrl("javascript:updateCO(" + Integer.toString(CO) + ")");
+            webViewGases.loadUrl("javascript:updateO3(" + Integer.toString(O3) + ")");
+            webViewGases.loadUrl("javascript:updateNO2(" + Integer.toString(NO2) + ")");
         }
         else
             this.batteryLevel = batteryLevel;
@@ -249,8 +255,6 @@ public class FragmentDashboardEnviro extends Fragment {
             }
 
             Log.d(TAG, ".hideSensors() Results for device " + MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getLocalName() + ": { accel: " + accelerometerService + ", weather:" + weatherSevice +", gases:" + gasesService + ", CO2:" + CO2Service + "}");
-            CO2Service= true;
-            gasesService = true;
             if(!CO2Service && !gasesService && cardViewGases != null) {
                 cardViewGases.setVisibility(View.GONE);
             }

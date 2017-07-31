@@ -276,7 +276,7 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                     if (getNO2Checkbox()) {
                         value[0] += 8;
                     }
-                    sensor.setSO2SensorOn(checkBoxPreferenceCO.isChecked());
+                    sensor.setCOSensorOn(checkBoxPreferenceCO.isChecked());
                     UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
                     Log.d(TAG, "CO checkbox toggled to " + value[0]);
                     if (sensor.getHasGasesSensor()) {
@@ -303,7 +303,7 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                     if (getNO2Checkbox()) {
                         value[0] += 8;
                     }
-                    sensor.setSO2SensorOn(checkBoxPreferenceO3.isChecked());
+                    sensor.setO3SensorOn(checkBoxPreferenceO3.isChecked());
                     UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
                     Log.d(TAG, "O3 checkbox toggled to " + value[0]);
                     if (sensor.getHasGasesSensor()) {
@@ -330,7 +330,7 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                     if (getNO2Checkbox()) {
                         value[0] += 8;
                     }
-                    sensor.setSO2SensorOn(checkBoxPreferenceNO2.isChecked());
+                    sensor.setNO2SensorOn(checkBoxPreferenceNO2.isChecked());
                     UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
                     Log.d(TAG, "NO2 checkbox toggled to " + value[0]);
                     if (sensor.getHasGasesSensor()) {

@@ -473,7 +473,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
 
                     fragmentDashboardEnviro.updateData(sensor.getLocalName(), sensor.getTemperatureEnviro(), sensor.getPressureEnviro(), sensor.getHumidityEnviro(),
                             sensor.getAccelerometerX(), sensor.getAccelerometerY(), sensor.getAccelerometerZ(),
-                            sensor.getBatteryLevel(), sensor.getRssi(), sensor.getLightEnviro(), sensor.getCO2Enviro());
+                            sensor.getBatteryLevel(), sensor.getRssi(), sensor.getLightEnviro(), sensor.getCO2Enviro(), sensor.getSO2Enviro(), sensor.getCOEnviro(), sensor.getO3Enviro(), sensor.getNO2Enviro());
                 }
             } else {
                 Log.d(TAG, ".updateDashboard() sensorData was not found.");

@@ -120,9 +120,9 @@
 
 
             <android.support.v7.widget.CardView
-                android:id="@+id/cardviewCO2"
+                android:id="@+id/cardviewGases"
                 android:layout_width="match_parent"
-                android:layout_height="190dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="5dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginLeft="10dp"
@@ -133,30 +133,33 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent">
 
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_weight="2.00"
+                        android:layout_width="match_parent"
+                        android:layout_height="45dp">
+
+                        <WebView
+                            android:id="@+id/webviewGasImmage"
+                            android:layout_weight="3.00"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            />
+
+                        <WebView
+                            android:id="@+id/webviewCO2"
+                            android:layout_weight="1.00"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            />
+
+                    </LinearLayout>
+
                     <WebView
-                        android:id="@+id/webviewCO2"
-                        android:layout_width="fill_parent"
-                        android:layout_height="fill_parent"
-                        />
-
-                    <TextView
+                        android:id="@+id/webviewGases"
+                        android:layout_weight="1.00"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="CO2"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                        android:textColor="@color/background_floating_material_dark"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginLeft="5dp" />
-
-                    <TextView
-                        android:id="@+id/CO2_ti"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#000000"
-                        android:text="-"
-                        android:textSize="40dp"
-                        android:textAlignment="center"
-                        android:layout_marginTop="5dp" />
+                        android:layout_height="55dp"/>
 
                 </LinearLayout>
 
@@ -165,7 +168,7 @@
             <android.support.v7.widget.CardView
                 android:id="@+id/cardviewAccelerometer"
                 android:layout_width="match_parent"
-                android:layout_height="350dp"
+                android:layout_height="200dp"
                 android:layout_marginBottom="5dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginLeft="10dp"
@@ -183,45 +186,6 @@
                         android:layout_margin="10dp"
                         />
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Accelerometer"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                        android:textColor="@color/background_floating_material_dark"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginLeft="5dp" />
-
-                    <TextView
-                        android:id="@+id/accelerometer_x_ti"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#000000"
-                        android:text="-"
-                        android:textSize="25dp"
-                        android:textAlignment="center"
-                        android:layout_marginTop="5dp" />
-
-                    <TextView
-                        android:id="@+id/accelerometer_y_ti"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#000000"
-                        android:text="-"
-                        android:textSize="25dp"
-                        android:textAlignment="center"
-                        android:layout_marginTop="5dp"
-                        android:layout_gravity="center_horizontal" />
-
-                    <TextView
-                        android:id="@+id/accelerometer_z_ti"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="#000000"
-                        android:text="-"
-                        android:textSize="25dp"
-                        android:textAlignment="center"
-                        android:layout_marginTop="5dp" />
 
                 </LinearLayout>
 

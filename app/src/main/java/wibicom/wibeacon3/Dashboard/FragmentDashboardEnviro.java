@@ -48,13 +48,14 @@ public class FragmentDashboardEnviro extends Fragment {
     WebView webViewHumidity;
     WebView webViewPressure;
     WebView webViewCO2;
+    WebView webViewGases;
     WebView webViewAccelerometer;
     WebView webViewGeneralInfo;
 
     CardView cardViewTemperature;
     CardView cardViewHumidity;
     CardView cardViewPressure;
-    CardView cardViewCO2;
+    CardView cardViewGases;
     CardView cardViewAccelerometer;
 
     private final static String TAG = FragmentDashboardEnviro.class.getName();
@@ -85,7 +86,8 @@ public class FragmentDashboardEnviro extends Fragment {
 //        accelerometerTextZ = (TextView) view.findViewById(R.id.accelerometer_z_ti);
 //        rssiText = (TextView) view.findViewById(R.id.rssi_enviro);
 //        lightText = (TextView) view.findViewById(R.id.light_enviro);
-
+        WebView gasImmage = (WebView) view.findViewById(R.id.webviewGasImmage);
+        gasImmage.loadUrl("file:///android_asset/gasImmage.html");
 
 
         webViewTemperature = (WebView) view.findViewById(R.id.webviewTemperature);
@@ -98,6 +100,7 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewHumidity = (WebView) view.findViewById(R.id.webviewHumidity);
         webViewPressure = (WebView) view.findViewById(R.id.webviewPressure);
         webViewCO2 = (WebView) view.findViewById(R.id.webviewCO2);
+        webViewGases = (WebView) view.findViewById(R.id.webviewGases);
         webViewAccelerometer = (WebView) view.findViewById(R.id.webviewAccelerometer);
         webViewGeneralInfo = (WebView) view.findViewById(R.id.webview_general_info);
 
@@ -106,16 +109,19 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewHumidity.getSettings().setJavaScriptEnabled(true);
         webViewPressure.getSettings().setJavaScriptEnabled(true);
         webViewCO2.getSettings().setJavaScriptEnabled(true);
+        webViewGases.getSettings().setJavaScriptEnabled(true);
         webViewAccelerometer.getSettings().setJavaScriptEnabled(true);
         webViewGeneralInfo.getSettings().setJavaScriptEnabled(true);
 
         // Load the html file
+        webViewGeneralInfo.loadUrl("file:///android_asset/enviro_general_info.html");
         webViewTemperature.loadUrl("file:///android_asset/temperature_widget_min.html");
         webViewHumidity.loadUrl("file:///android_asset/humidity_widget_min.html");
         webViewPressure.loadUrl("file:///android_asset/pressure_widget_min.html");
-        webViewCO2.loadUrl("file:///android_asset/CO2_widget.html");
-        webViewAccelerometer.loadUrl("file:///android_asset/accelerometer_widget.html");
-        webViewGeneralInfo.loadUrl("file:///android_asset/enviro_general_info.html");
+        webViewCO2.loadUrl("file:///android_asset/CO2_widget_min.html");
+        webViewGases.loadUrl("file:///android_asset/gases_widget_min.html");
+        webViewAccelerometer.loadUrl("file:///android_asset/accelerometer_widget_min.html");
+
 
         // Display battery level if it was not created when updateData function was called
         //batteryLevelText.setText(Integer.toString(batteryLevel) + " %");
@@ -125,7 +131,7 @@ public class FragmentDashboardEnviro extends Fragment {
         cardViewHumidity = (CardView) view.findViewById(R.id.cardviewHumidity);
         cardViewPressure = (CardView) view.findViewById(R.id.cardviewPressure);
         cardViewAccelerometer = (CardView) view.findViewById(R.id.cardviewAccelerometer);
-        cardViewCO2 = (CardView) view.findViewById(R.id.cardviewCO2);
+        cardViewGases = (CardView) view.findViewById(R.id.cardviewGases);
 
         hideSensors();
 
@@ -213,8 +219,8 @@ public class FragmentDashboardEnviro extends Fragment {
             boolean CO2Service = false;
             boolean accelerometerService = false;
             boolean gasesService = false;
-            if (cardViewCO2 != null) {
-                cardViewCO2.setVisibility(View.VISIBLE);
+            if (cardViewGases != null) {
+                cardViewGases.setVisibility(View.VISIBLE);
                 cardViewTemperature.setVisibility(View.VISIBLE);
                 cardViewHumidity.setVisibility(View.VISIBLE);
                 cardViewPressure.setVisibility(View.VISIBLE);
@@ -243,10 +249,24 @@ public class FragmentDashboardEnviro extends Fragment {
             }
 
             Log.d(TAG, ".hideSensors() Results for device " + MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getLocalName() + ": { accel: " + accelerometerService + ", weather:" + weatherSevice +", gases:" + gasesService + ", CO2:" + CO2Service + "}");
-
-            if (!CO2Service && cardViewCO2 != null) {
-                cardViewCO2.setVisibility(View.GONE);
+            CO2Service= true;
+            gasesService = true;
+            if(!CO2Service && !gasesService && cardViewGases != null) {
+                cardViewGases.setVisibility(View.GONE);
             }
+            else if(CO2Service && !gasesService && webViewGases != null && webViewCO2 != null && cardViewGases != null) {
+                webViewCO2.setVisibility(View.VISIBLE);
+                webViewGases.setVisibility(View.GONE);
+            }
+            else if(!CO2Service && gasesService && webViewGases != null && webViewCO2 != null && cardViewGases != null) {
+                webViewCO2.setVisibility(View.INVISIBLE);
+                webViewGases.setVisibility(View.VISIBLE);
+            }
+            else if(CO2Service && gasesService && webViewGases != null && webViewCO2 != null && cardViewGases != null) {
+                webViewCO2.setVisibility(View.VISIBLE);
+                webViewGases.setVisibility(View.VISIBLE);
+            }
+
             if (!weatherSevice && cardViewTemperature != null && cardViewHumidity != null && cardViewPressure != null) {
                 cardViewTemperature.setVisibility(View.GONE);
                 cardViewHumidity.setVisibility(View.GONE);

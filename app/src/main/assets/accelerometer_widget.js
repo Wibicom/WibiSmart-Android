@@ -47,8 +47,10 @@ function render_progressbar_accelerometer(live_acc, axis){
 
 function render_total_acceleration (accx, accy, accz){
     var total_acceleration = (Math.sqrt(Math.pow(accx,2)+ Math.pow(accy,2)+ Math.pow(accz,2))).toFixed(2);
-     document.getElementById('totalaccelerationvalue').innerHTML = total_acceleration + " mg";
-
+    if(document.getElementById('totalaccelerationvalue_min'))
+    document.getElementById('totalaccelerationvalue_min').innerHTML = total_acceleration + " mg";
+    else if(document.getElementById('totalaccelerationvalue'))
+    document.getElementById('totalaccelerationvalue').innerHTML = total_acceleration + " mg";
 }
 
 function set_accelerometer_data(accx, accy, accz){

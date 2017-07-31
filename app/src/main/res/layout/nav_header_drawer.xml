@@ -21,15 +21,25 @@
 <!--</LinearLayout>-->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-android:layout_width="match_parent"
-android:layout_height="50dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+android:layout_height="150dp"
 android:background="#01579B"
 android:padding="16dp"
 android:theme="@style/ThemeOverlay.AppCompat.Dark"
 android:orientation="vertical"
-android:gravity="bottom">
+android:gravity="bottom"
+    android:weightSum="1">
 
-<TextView
+
+    <ImageView
+        android:id="@+id/imageView9"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_logo"
+        android:layout_weight="0.57" />
+
+    <TextView
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:text="Wibicom"

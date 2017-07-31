@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.util.Pair;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
@@ -517,19 +519,31 @@ public class DataHandler {
         }
     }
 
-    public int getDataCount() {
-        Map<String, Object> map = new HashMap<String, Object>();
-        List<Object> out = new ArrayList<Object>();
-        Query q = ds.query();
-        try {
-            QueryResult qr = q.find(map);
-            return qr.size();
-        } catch(QueryException e) {
-            e.printStackTrace();
-        }
-        return -1;
+    public void setDataCountMessage(TextView message) {
+        new SetDataCountMessageTask().execute(message);
     }
-    
+
+    private class SetDataCountMessageTask extends AsyncTask<TextView, Void, Pair<TextView, Integer>> {
+        @Override
+        protected Pair<TextView,Integer> doInBackground(TextView... params) {
+
+            Map<String, Object> map = new HashMap<String, Object>();
+            List<Object> out = new ArrayList<Object>();
+            Query q = ds.query();
+            try {
+                QueryResult qr = q.find(map);
+                return new Pair<>(params[0], qr.size());
+            } catch(QueryException e) {
+                e.printStackTrace();
+            }
+            return new Pair<>(params[0], -1);
+        }
+        @Override
+        protected void onPostExecute(Pair<TextView,Integer> result) {
+            result.first.setText("Your current storage is " +  result.second + " files.");
+        }
+    }
+
 
     public void pushOneFile(Object file) {
         new PushOneFileTask().execute(file);

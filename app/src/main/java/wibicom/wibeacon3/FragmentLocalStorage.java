@@ -59,7 +59,8 @@ public class FragmentLocalStorage extends Fragment {
         Button buttonDeleteData = (Button)view.findViewById(R.id.button_delete_data);
         final EditText inputDatabaseName = (EditText)view.findViewById(R.id.database_name_input);
 
-        message.setText("Your current storage is " + DataHandler.getInstance().getDataCount() + " files.");
+        message.setText("Loading files...");
+        DataHandler.getInstance().setDataCountMessage(messageTextView);
 
         buttonOk.setOnClickListener(new View.OnClickListener() {
             @Override

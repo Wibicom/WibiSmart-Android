@@ -99,25 +99,38 @@ public class DataHandler {
         }
     }
 
-    public void deleteAllStoredDocuments() {
-        Map<String, Object> map = new HashMap<String, Object>();
+    public void deleteAllStoredDocuments(FragmentLocalStorage fragmentLocalStorage) {
+        new DeleteAllLocalFilesTask().execute(fragmentLocalStorage);
+    }
 
-        Query q = ds.query();
-        try {
-            QueryResult qr = q.find(map);
-            Log.d(TAG, " .deleteAllStoredDocuments() deleting " + qr.size() + "files." );
-            for(DocumentRevision dr: qr) {
-                ds.database().delete(dr);
+    private class DeleteAllLocalFilesTask extends AsyncTask<FragmentLocalStorage, FragmentLocalStorage, Void> {
+        @Override
+        protected Void doInBackground(FragmentLocalStorage... param) {
+            Map<String, Object> map = new HashMap<String, Object>();
+
+            Query q = ds.query();
+            try {
+                QueryResult qr = q.find(map);
+                Log.d(TAG, " .deleteAllStoredDocuments() deleting " + qr.size() + "files." );
+                for(DocumentRevision dr: qr) {
+                    ds.database().delete(dr);
+                    publishProgress(param[0]);
+                }
+                MainActivity.getInstance().displaySnackbar(qr.size() + " items have been deleted from the local storage...");
+            } catch (QueryException e) {
+                e.printStackTrace();
+            } catch (ConflictException e) {
+                e.printStackTrace();
+            } catch (DocumentNotFoundException e) {
+                e.printStackTrace();
+            } catch (DocumentStoreException e) {
+                e.printStackTrace();
             }
-            MainActivity.getInstance().displaySnackbar(qr.size() + " items have been deleted from the local storage...");
-        } catch (QueryException e) {
-            e.printStackTrace();
-        } catch (ConflictException e) {
-            e.printStackTrace();
-        } catch (DocumentNotFoundException e) {
-            e.printStackTrace();
-        } catch (DocumentStoreException e) {
-            e.printStackTrace();
+            return null;
+        }
+        @Override
+        protected void onProgressUpdate(FragmentLocalStorage... param) {
+            param[0].setMessage("Your current storage is "+ (Integer.parseInt(param[0].getMessageDataCount())-1) +" files.");
         }
     }
 
@@ -516,6 +529,7 @@ public class DataHandler {
         }
         return -1;
     }
+    
 
     public void pushOneFile(Object file) {
         new PushOneFileTask().execute(file);

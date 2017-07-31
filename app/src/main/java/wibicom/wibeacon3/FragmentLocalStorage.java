@@ -19,7 +19,7 @@ import android.widget.TextView;
 public class FragmentLocalStorage extends Fragment {
 
     private OnLocalStorageInteractionListener mListener;
-
+    private FragmentLocalStorage instance = this;
     private Switch switchLocalStorage;
     static boolean switchState = false;
 
@@ -85,8 +85,8 @@ public class FragmentLocalStorage extends Fragment {
             @Override
             public void onClick(View v) {
                 MainActivity.getInstance().displaySnackbar("Deleting local files...");
-                DataHandler.getInstance().deleteAllStoredDocuments();
-                messageTextView.setText("Your current storage is 0 files.");
+                DataHandler.getInstance().deleteAllStoredDocuments(instance);
+                //messageTextView.setText("Your current storage is 0 files.");
             }
         });
 
@@ -127,6 +127,14 @@ public class FragmentLocalStorage extends Fragment {
     {
         mListener.onSwitchInteractionLocalStorage(switchLocalStorage.isChecked());
         getActivity().getFragmentManager().beginTransaction().remove(this).commit();
+    }
+
+    public void setMessage(String messsage) {
+        messageTextView.setText(messsage);
+    }
+
+    public String getMessageDataCount() {
+        return messageTextView.getText().toString().split(" ")[4];
     }
 
 

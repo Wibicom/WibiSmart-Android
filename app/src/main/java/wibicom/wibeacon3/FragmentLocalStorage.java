@@ -87,7 +87,7 @@ public class FragmentLocalStorage extends Fragment {
             public void onClick(View v) {
                 MainActivity.getInstance().displaySnackbar("Deleting local files...");
                 DataHandler.getInstance().deleteAllStoredDocuments(instance);
-                //messageTextView.setText("Your current storage is 0 files.");
+                DataHandler.getInstance().setDataCountMessage(messageTextView);
             }
         });
 

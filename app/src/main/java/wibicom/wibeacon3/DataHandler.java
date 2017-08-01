@@ -19,6 +19,7 @@ import com.cloudant.sync.documentstore.DocumentNotFoundException;
 import com.cloudant.sync.documentstore.DocumentRevision;
 import com.cloudant.sync.documentstore.DocumentStore;
 import com.cloudant.sync.documentstore.DocumentStoreException;
+import com.cloudant.sync.documentstore.DocumentStoreNotDeletedException;
 import com.cloudant.sync.query.Query;
 import com.cloudant.sync.query.QueryException;
 import com.cloudant.sync.query.QueryResult;
@@ -102,7 +103,17 @@ public class DataHandler {
     }
 
     public void deleteAllStoredDocuments(FragmentLocalStorage fragmentLocalStorage) {
-        new DeleteAllLocalFilesTask().execute(fragmentLocalStorage);
+        //new DeleteAllLocalFilesTask().execute(fragmentLocalStorage);
+        try {
+
+            ds.delete();
+            ds = DocumentStore.getInstance(new File(path, "my_document_store"));
+        } catch (DocumentStoreNotDeletedException e) {
+            e.printStackTrace();
+        } catch (DocumentStoreException dse) {
+            dse.printStackTrace();
+        }
+        MainActivity.getInstance().displaySnackbar("All items have been deleted from the local storage");
     }
 
     private class DeleteAllLocalFilesTask extends AsyncTask<FragmentLocalStorage, FragmentLocalStorage, Void> {

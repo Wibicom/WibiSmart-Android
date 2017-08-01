@@ -155,11 +155,49 @@
 
                     </LinearLayout>
 
-                    <WebView
-                        android:id="@+id/webviewGases"
-                        android:layout_weight="1.00"
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_weight="2.00"
                         android:layout_width="match_parent"
-                        android:layout_height="55dp"/>
+                        android:layout_height="30dp">
+
+                        <WebView
+                            android:id="@+id/webviewSO2"
+                            android:layout_weight="1.00"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            />
+
+                        <WebView
+                            android:id="@+id/webviewCO"
+                            android:layout_weight="1.00"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_weight="2.00"
+                        android:layout_width="match_parent"
+                        android:layout_height="30dp">
+
+                        <WebView
+                            android:id="@+id/webviewO3"
+                            android:layout_weight="1.00"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            />
+
+                        <WebView
+                            android:id="@+id/webviewNO2"
+                            android:layout_weight="1.00"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 

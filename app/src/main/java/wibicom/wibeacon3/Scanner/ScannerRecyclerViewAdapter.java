@@ -59,7 +59,7 @@ public class ScannerRecyclerViewAdapter extends RecyclerView.Adapter<ScannerRecy
         else
             holder.mTitleView.setText("N/A");
 
-        holder.mButton.setOnClickListener(new View.OnClickListener() {
+        /*holder.mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ListPopupWindow list = new ListPopupWindow(holder.mView.getContext());
@@ -73,7 +73,7 @@ public class ScannerRecyclerViewAdapter extends RecyclerView.Adapter<ScannerRecy
                 //list.setAnchorView(holder.mView);
                 list.show();
             }
-        });
+        });*/
 
 
         holder.mView.setOnClickListener(new View.OnClickListener() {

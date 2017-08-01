@@ -108,6 +108,7 @@ public class DataHandler {
     private class DeleteAllLocalFilesTask extends AsyncTask<FragmentLocalStorage, FragmentLocalStorage, Void> {
         @Override
         protected Void doInBackground(FragmentLocalStorage... param) {
+            Log.d(TAG, "executing all file deletion...");
             Map<String, Object> map = new HashMap<String, Object>();
 
             Query q = ds.query();
@@ -526,7 +527,7 @@ public class DataHandler {
     private class SetDataCountMessageTask extends AsyncTask<TextView, Void, Pair<TextView, Integer>> {
         @Override
         protected Pair<TextView,Integer> doInBackground(TextView... params) {
-
+            Log.d(TAG, "executing data count in background...");
             Map<String, Object> map = new HashMap<String, Object>();
             List<Object> out = new ArrayList<Object>();
             Query q = ds.query();

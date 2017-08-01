@@ -12,10 +12,12 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Pair;
@@ -29,8 +31,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -68,16 +72,16 @@ public class BluetoothLeService extends Service {
     private static final String TI_BAROMETER_CAL_CHAR_UUID = "0000aa42-0000-1000-8000-00805f9b34fb";
     private static final String TI_BAROMETER_PERI_CHAR_UUID = "0000aa42-0000-1000-8000-00805f9b34fb";
 
-    private static final String SPEC_SERVICE_UUID = "0000bb10-0000-1000-8000-00805f9b34fb";
-    private static final String SPEC_DATA_CHAR_UUID = "0000bb11-0000-1000-8000-00805f9b34fb";
-    private static final String SPEC_CONF_CHAR_UUID = "0000bb12-0000-1000-8000-00805f9b34fb";
-    private static final String SPEC_PEROÏOD_CHAR_UUID = "0000bb14-0000-1000-8000-00805f9b34fb";
+    private static final String SPEC_SERVICE_UUID = "0000bb40-0000-1000-8000-00805f9b34fb";
+    private static final String SPEC_DATA_CHAR_UUID = "0000bb41-0000-1000-8000-00805f9b34fb";
+    private static final String SPEC_CONF_CHAR_UUID = "0000bb42-0000-1000-8000-00805f9b34fb";
+    private static final String SPEC_PEROÏOD_CHAR_UUID = "0000bb44-0000-1000-8000-00805f9b34fb";
 
 
-    private static final String CO2_SERVICE_UUID = "0000cc10-0000-1000-8000-00805f9b34fb";
-    private static final String CO2_DATA_CHAR_UUID = "0000cc11-0000-1000-8000-00805f9b34fb";
-    private static final String CO2_CONF_CHAR_UUID = "0000cc12-0000-1000-8000-00805f9b34fb";
-    private static final String CO2_PEROÏOD_CHAR_UUID = "0000cc14-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_SERVICE_UUID = "0000cc30-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_DATA_CHAR_UUID = "0000cc31-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_CONF_CHAR_UUID = "0000cc32-0000-1000-8000-00805f9b34fb";
+    private static final String CO2_PEROÏOD_CHAR_UUID = "0000cc34-0000-1000-8000-00805f9b34fb";
 
     private static final String MODEL_NUMBER_STRING_CHAR_UUID = "00002a24-0000-1000-8000-00805f9b34fb";
     private static final String TI_ACCELEROMETER_DATA_CHAR_UUID = "0000aa81-0000-1000-8000-00805f9b34fb";
@@ -383,8 +387,6 @@ public class BluetoothLeService extends Service {
                 addCharacteristicNotifyQueue(characteristic);
                 updateCharacteristicValue(gatt, characteristic);
             }
-            if(characteristic.getValue().length >0)
-                Log.d("yay", characteristic.getUuid() + " " + characteristic.getValue()[0]);
             // Read the next characteristic in the queue & broadcast when queue is empty.
             if(characteristicQueue.isEmpty())
             {
@@ -672,10 +674,10 @@ public class BluetoothLeService extends Service {
             } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().SPEC_DATA_CHAR_UUID_ENVIRO)) {
                 thisSensorData.setGases(byteArray);
 
-                int SO2 = thisSensorData.getSO2Enviro();
-                int CO = thisSensorData.getCOEnviro();
-                int O3 = thisSensorData.getO3Enviro();
-                int NO2 = thisSensorData.getNO2Enviro();
+                float SO2 = thisSensorData.getSO2Enviro();
+                float CO = thisSensorData.getCOEnviro();
+                float O3 = thisSensorData.getO3Enviro();
+                float NO2 = thisSensorData.getNO2Enviro();
                 if ((transmitToCloud || storingLocally) && (SO2 != 0 || CO != 0 || O3 != 0 || NO2 != 0)) {
                     Map<String, Object> body = new HashMap<String, Object>();
                     Map<String, Object> data = new HashMap<String, Object>();
@@ -845,7 +847,13 @@ public class BluetoothLeService extends Service {
                 out += "12-";
                 break;
         }
-        out += fullDate[0] + "T" + fullDate[3] + "." + miliseconds[10] + miliseconds[11] + miliseconds[12] + "Z";
+        if(fullDate[0].length() == 1) {
+            out += "0" + fullDate[0];
+        }
+        else {
+            out += fullDate[0];
+        }
+        out += "T" + fullDate[3] + "." + miliseconds[10] + miliseconds[11] + miliseconds[12] + "Z";
 
 
         return out;

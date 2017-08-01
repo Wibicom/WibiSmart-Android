@@ -48,7 +48,10 @@ public class FragmentDashboardEnviro extends Fragment {
     WebView webViewHumidity;
     WebView webViewPressure;
     WebView webViewCO2;
-    WebView webViewGases;
+    WebView webViewSO2;
+    WebView webViewCO;
+    WebView webViewO3;
+    WebView webViewNO2;
     WebView webViewAccelerometer;
     WebView webViewGeneralInfo;
 
@@ -100,7 +103,10 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewHumidity = (WebView) view.findViewById(R.id.webviewHumidity);
         webViewPressure = (WebView) view.findViewById(R.id.webviewPressure);
         webViewCO2 = (WebView) view.findViewById(R.id.webviewCO2);
-        webViewGases = (WebView) view.findViewById(R.id.webviewGases);
+        webViewSO2 = (WebView) view.findViewById(R.id.webviewSO2);
+        webViewCO = (WebView) view.findViewById(R.id.webviewCO);
+        webViewO3 = (WebView) view.findViewById(R.id.webviewO3);
+        webViewNO2 = (WebView) view.findViewById(R.id.webviewNO2);
         webViewAccelerometer = (WebView) view.findViewById(R.id.webviewAccelerometer);
         webViewGeneralInfo = (WebView) view.findViewById(R.id.webview_general_info);
 
@@ -109,7 +115,10 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewHumidity.getSettings().setJavaScriptEnabled(true);
         webViewPressure.getSettings().setJavaScriptEnabled(true);
         webViewCO2.getSettings().setJavaScriptEnabled(true);
-        webViewGases.getSettings().setJavaScriptEnabled(true);
+        webViewSO2.getSettings().setJavaScriptEnabled(true);
+        webViewCO.getSettings().setJavaScriptEnabled(true);
+        webViewO3.getSettings().setJavaScriptEnabled(true);
+        webViewNO2.getSettings().setJavaScriptEnabled(true);
         webViewAccelerometer.getSettings().setJavaScriptEnabled(true);
         webViewGeneralInfo.getSettings().setJavaScriptEnabled(true);
 
@@ -119,7 +128,10 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewHumidity.loadUrl("file:///android_asset/humidity_widget_min.html");
         webViewPressure.loadUrl("file:///android_asset/pressure_widget_min.html");
         webViewCO2.loadUrl("file:///android_asset/CO2_widget_min.html");
-        webViewGases.loadUrl("file:///android_asset/gases_widget_min.html");
+        webViewSO2.loadUrl("file:///android_asset/SO2_widget_min.html");
+        webViewCO.loadUrl("file:///android_asset/CO_widget_min.html");
+        webViewO3.loadUrl("file:///android_asset/O3_widget_min.html");
+        webViewNO2.loadUrl("file:///android_asset/NO2_widget_min.html");
         webViewAccelerometer.loadUrl("file:///android_asset/accelerometer_widget_min.html");
 
 
@@ -138,7 +150,7 @@ public class FragmentDashboardEnviro extends Fragment {
         return view;
     }
 
-    public void updateData(String name, float temperature, float pressure, float humidity, float accelerometerX, float accelerometerY, float accelerometerZ, int batteryLevel, int rssi, int light, int CO2, int SO2, int CO, int O3, int NO2)
+    public void updateData(String name, float temperature, float pressure, float humidity, float accelerometerX, float accelerometerY, float accelerometerZ, int batteryLevel, int rssi, int light, int CO2, float SO2, float CO, float O3, float NO2)
     {
         //webViewTemperature.loadUrl("file:///android_asset/temperature_widget.html");
         //webViewTemperature.loadUrl("javascript:updateTemperature()");
@@ -161,11 +173,11 @@ public class FragmentDashboardEnviro extends Fragment {
         if(webViewCO2 != null) {
             webViewCO2.loadUrl("javascript:updateCO2(" + Integer.toString(CO2) + ")");
         }
-        if(webViewGases != null) {
-            webViewGases.loadUrl("javascript:updateSO2(" + Integer.toString(SO2) + ")");
-            webViewGases.loadUrl("javascript:updateCO(" + Integer.toString(CO) + ")");
-            webViewGases.loadUrl("javascript:updateO3(" + Integer.toString(O3) + ")");
-            webViewGases.loadUrl("javascript:updateNO2(" + Integer.toString(NO2) + ")");
+        if(webViewSO2 != null && webViewCO != null && webViewO3 != null && webViewNO2 != null) {
+            webViewSO2.loadUrl("javascript:updateSO2(" + Float.toString(SO2) + ")");
+            webViewCO.loadUrl("javascript:updateCO(" + Float.toString(CO) + ")");
+            webViewO3.loadUrl("javascript:updateO3(" + Float.toString(O3) + ")");
+            webViewNO2.loadUrl("javascript:updateNO2(" + Float.toString(NO2) + ")");
         }
         else
             this.batteryLevel = batteryLevel;
@@ -258,17 +270,26 @@ public class FragmentDashboardEnviro extends Fragment {
             if(!CO2Service && !gasesService && cardViewGases != null) {
                 cardViewGases.setVisibility(View.GONE);
             }
-            else if(CO2Service && !gasesService && webViewGases != null && webViewCO2 != null && cardViewGases != null) {
+            else if(CO2Service && !gasesService && webViewSO2 != null && webViewCO != null && webViewO3 != null && webViewNO2 != null && webViewCO2 != null && cardViewGases != null) {
                 webViewCO2.setVisibility(View.VISIBLE);
-                webViewGases.setVisibility(View.GONE);
+                webViewSO2.setVisibility(View.GONE);
+                webViewCO.setVisibility(View.GONE);
+                webViewO3.setVisibility(View.GONE);
+                webViewNO2.setVisibility(View.GONE);
             }
-            else if(!CO2Service && gasesService && webViewGases != null && webViewCO2 != null && cardViewGases != null) {
+            else if(!CO2Service && gasesService && webViewSO2 != null && webViewCO != null && webViewO3 != null && webViewNO2 != null && webViewCO2 != null && cardViewGases != null) {
                 webViewCO2.setVisibility(View.INVISIBLE);
-                webViewGases.setVisibility(View.VISIBLE);
+                webViewSO2.setVisibility(View.VISIBLE);
+                webViewCO.setVisibility(View.VISIBLE);
+                webViewO3.setVisibility(View.VISIBLE);
+                webViewNO2.setVisibility(View.VISIBLE);
             }
-            else if(CO2Service && gasesService && webViewGases != null && webViewCO2 != null && cardViewGases != null) {
+            else if(CO2Service && gasesService && webViewSO2 != null && webViewCO != null && webViewO3 != null && webViewNO2 != null && webViewCO2 != null && cardViewGases != null) {
                 webViewCO2.setVisibility(View.VISIBLE);
-                webViewGases.setVisibility(View.VISIBLE);
+                webViewSO2.setVisibility(View.VISIBLE);
+                webViewCO.setVisibility(View.VISIBLE);
+                webViewO3.setVisibility(View.VISIBLE);
+                webViewNO2.setVisibility(View.VISIBLE);
             }
 
             if (!weatherSevice && cardViewTemperature != null && cardViewHumidity != null && cardViewPressure != null) {

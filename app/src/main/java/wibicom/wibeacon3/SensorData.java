@@ -35,10 +35,10 @@ public class SensorData {
     private float humidityEnviro = 0;
 
     private int CO2Enviro = 0;
-    private int SO2Enviro = 0;
-    private int COEnviro = 0;
-    private int O3Enviro = 0;
-    private int NO2Enviro = 0;
+    private float SO2Enviro = 0;
+    private float COEnviro = 0;
+    private float O3Enviro = 0;
+    private float NO2Enviro = 0;
 
     private float accelerometerX = 0;
     private float accelerometerY = 0;
@@ -102,7 +102,7 @@ public class SensorData {
     public void setCO2Enviro(byte[] CO2)
     {
         //Log.d("CO222", CO2.length+"");
-        //Log.d("CO222", CO2[0]+ " "+ CO2[1]+ " "+ CO2[2]+ " "+ CO2[3]+ " "+ CO2[4]+ " "+ CO2[4]+ " "+ CO2[5]+ " "+ CO2[6]+ " "+ CO2[7]+ " "+ CO2[8]+ " "+ CO2[9]+ " "+ CO2[10]+ " "+ CO2[11]+ " "+ CO2[12]+ " "+ CO2[13]+ " "+ CO2[14]+ " "+ CO2[15]);
+        //Log.d("yayCO2", CO2[0]+ " "+ CO2[1]+ " "+ CO2[2]+ " "+ CO2[3]+ " "+ CO2[4]+ " "+ CO2[4]+ " "+ CO2[5]+ " "+ CO2[6]+ " "+ CO2[7]+ " "+ CO2[8]+ " "+ CO2[9]+ " "+ CO2[10]+ " "+ CO2[11]+ " "+ CO2[12]+ " "+ CO2[13]+ " "+ CO2[14]+ " "+ CO2[15]);
         CO2Enviro = Math.round(((int)((CO2[3]-48) * 10000 + (CO2[4]-48)*1000 + (CO2[5]-48)*100 + (CO2[6]-48)*10 + (CO2[7]-48))) * 10)/10;
     }
 
@@ -115,10 +115,32 @@ public class SensorData {
 
 
     public void setGases(byte[] gasesData) {
-        SO2Enviro = (int) Math.round(((Integer.parseInt(gasesData[7] + "" + gasesData[6] + "" + gasesData[5] + "" + gasesData[4], 16) * Math.pow(10, -6)) - 1.25)/0.0045852);
-        COEnviro = (int) Math.round(((Integer.parseInt(gasesData[7] + "" + gasesData[6] + "" + gasesData[5] + "" + gasesData[4], 16) * Math.pow(10, -6)) - 1.25)/0.0008940);
-        O3Enviro = (int) Math.round(((Integer.parseInt(gasesData[7] + "" + gasesData[6] + "" + gasesData[5] + "" + gasesData[4], 16) * Math.pow(10, -6)) - 1.25)/-0.0055475);
-        NO2Enviro = (int) Math.round(((Integer.parseInt(gasesData[7] + "" + gasesData[6] + "" + gasesData[5] + "" + gasesData[4], 16) * Math.pow(10, -6)) - 1.25)/-0.0165620);
+        //Log.d("yaygas",gasesData[0] + " " + gasesData[1] + " " + gasesData[2] + " " + gasesData[3] + " " + gasesData[4] + " " + gasesData[5] + " " + gasesData[6] + " " + gasesData[7] +" "+ gasesData[8] + " " + gasesData[9] + " " + gasesData[10] + " " + gasesData[11] +" " +gasesData[12] + " " + gasesData[13] + " " + gasesData[14] + " " + gasesData[15]);
+        //Log.d("yaygas", convert(gasesData[0]) + " " + convert(gasesData[1]) + " " + convert(gasesData[2]) + " " + convert(gasesData[3]) + " " + convert(gasesData[4]) + " " + convert(gasesData[5]) + " " + convert(gasesData[6]) + " " + convert(gasesData[7]) +" "+ convert(gasesData[8]) + " " + convert(gasesData[9]) + " " + convert(gasesData[10]) + " " + convert(gasesData[11]) +" " +convert(gasesData[12]) + " " + convert(gasesData[13]) + " " + convert(gasesData[14]) + " " + convert(gasesData[15]));
+        SO2Enviro = (float) Math.round(100 * ((Integer.parseInt(specParser(gasesData,4,7), 16) * Math.pow(10, -6)) - 1.25)/0.0045852)/100;
+        COEnviro = (float) Math.round(100 * ((Integer.parseInt(specParser(gasesData,0,3), 16) * Math.pow(10, -6)) - 1.25)/0.0008940)/100;
+        O3Enviro = (float) Math.round(100 * ((Integer.parseInt(specParser(gasesData,8,11), 16) * Math.pow(10, -6)) - 1.25)/-0.0055475)/100;
+        NO2Enviro = (float) Math.round(100 * ((Integer.parseInt(specParser(gasesData,12,15), 16) * Math.pow(10, -6)) - 1.25)/-0.0165620)/100;
+    }
+    public static String convertHex(int n) {
+        String out = Integer.toHexString(n);
+        if (out.length() == 1) {
+            out = "0" + out;
+        }
+        else if (out.length() == 8) {
+            out = out.substring(6,8);
+        }
+        else if (out.length() == 7) {
+            out = "0" + out.substring(6,7);
+        }
+        return out;
+    }
+    public String specParser(byte[] gasesData, int start, int end) {
+        String out = "";
+        for (int i = start; i< end+1; i++) {
+            out += convertHex(gasesData[i]);
+        }
+        return out;
     }
 
     public void setBatteryLevel(int battery)
@@ -179,13 +201,13 @@ public class SensorData {
 
     public int getCO2Enviro() { return CO2Enviro; }
 
-    public int getSO2Enviro() { return SO2Enviro; }
+    public float getSO2Enviro() { return SO2Enviro; }
 
-    public int getCOEnviro() { return COEnviro; }
+    public float getCOEnviro() { return COEnviro; }
 
-    public int getO3Enviro() { return O3Enviro; }
+    public float getO3Enviro() { return O3Enviro; }
 
-    public int getNO2Enviro() { return NO2Enviro; }
+    public float getNO2Enviro() { return NO2Enviro; }
 
     public int getBatteryLevel()
     {

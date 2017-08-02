@@ -316,7 +316,10 @@ public class DataHandler {
             HashMap<String, String> results = new HashMap<String, String>();
             results.put("battery", "");
             results.put("light", "");
-            results.put("gases", "");
+            results.put("SO2", "");
+            results.put("CO", "");
+            results.put("O3", "");
+            results.put("NO2", "");
             int size = out.size();
             int inc = size/25;
             boolean done = false;
@@ -341,8 +344,10 @@ public class DataHandler {
                         addDataPointToCSVString(thisMap, tempMap, results, "light", "light");
                         break;
                     case "gases":
-                        String[] specialLabels = {"SO2", "CO", "O3", "NO2"};
-                        addDataPointToCSVString(thisMap, tempMap, results, "gases", specialLabels);
+                        addDataPointToCSVString(thisMap, tempMap, results, "SO2", "SO2");
+                        addDataPointToCSVString(thisMap, tempMap, results, "CO", "CO");
+                        addDataPointToCSVString(thisMap, tempMap, results, "O3", "O3");
+                        addDataPointToCSVString(thisMap, tempMap, results, "NO2", "NO2");
                     default:
                         break;
                 }

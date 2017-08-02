@@ -32,7 +32,10 @@ public class FragmentHistoricalDashboard extends Fragment {
     WebView webViewHumidityGraph;
     WebView webViewPressureGraph;
     WebView webViewCO2Graph;
-    WebView webViewGasesGraph;
+    WebView webViewSO2Graph;
+    WebView webViewCOGraph;
+    WebView webViewO3Graph;
+    WebView webViewNO2Graph;
     WebView webViewAccelerometerGraph;
     WebView webViewLightGraph;
     WebView webViewBatteryGraph;
@@ -42,7 +45,10 @@ public class FragmentHistoricalDashboard extends Fragment {
     CardView cardViewHumidityGraph;
     CardView cardViewPressureGraph;
     CardView cardViewCO2Graph;
-    CardView cardViewGasesGraph;
+    CardView cardViewSO2Graph;
+    CardView cardViewCOGraph;
+    CardView cardViewO3Graph;
+    CardView cardViewNO2Graph;
     CardView cardViewAccelerometerGraph;
     CardView cardViewLightGraph;
     CardView cardViewBatteryGraph;
@@ -83,7 +89,10 @@ public class FragmentHistoricalDashboard extends Fragment {
         webViewHumidityGraph = (WebView) view.findViewById(R.id.webviewHumidityGraph);
         webViewPressureGraph = (WebView) view.findViewById(R.id.webviewPressureGraph);
         webViewCO2Graph = (WebView) view.findViewById(R.id.webviewCO2Graph);
-        webViewGasesGraph = (WebView) view.findViewById(R.id.webviewGasesGraph);
+        webViewSO2Graph = (WebView) view.findViewById(R.id.webviewSO2Graph);
+        webViewCOGraph = (WebView) view.findViewById(R.id.webviewCOGraph);
+        webViewO3Graph = (WebView) view.findViewById(R.id.webviewO3Graph);
+        webViewNO2Graph = (WebView) view.findViewById(R.id.webviewNO2Graph);
         webViewAccelerometerGraph = (WebView) view.findViewById(R.id.webviewAccelerometerGraph);
         webViewLightGraph = (WebView) view.findViewById(R.id.webviewLightGraph);
         webViewBatteryGraph = (WebView) view.findViewById(R.id.webviewBatteryGraph);
@@ -94,7 +103,10 @@ public class FragmentHistoricalDashboard extends Fragment {
         webViewHumidityGraph.getSettings().setJavaScriptEnabled(true);
         webViewPressureGraph.getSettings().setJavaScriptEnabled(true);
         webViewCO2Graph.getSettings().setJavaScriptEnabled(true);
-        webViewGasesGraph.getSettings().setJavaScriptEnabled(true);
+        webViewSO2Graph.getSettings().setJavaScriptEnabled(true);
+        webViewCOGraph.getSettings().setJavaScriptEnabled(true);
+        webViewO3Graph.getSettings().setJavaScriptEnabled(true);
+        webViewNO2Graph.getSettings().setJavaScriptEnabled(true);
         webViewAccelerometerGraph.getSettings().setJavaScriptEnabled(true);
         webViewLightGraph.getSettings().setJavaScriptEnabled(true);
         webViewBatteryGraph.getSettings().setJavaScriptEnabled(true);
@@ -106,7 +118,10 @@ public class FragmentHistoricalDashboard extends Fragment {
         webViewHumidityGraph.loadUrl("file:///android_asset/historical-chart.html");
         webViewPressureGraph.loadUrl("file:///android_asset/historical-chart.html");
         webViewCO2Graph.loadUrl("file:///android_asset/historical-chart.html");
-        webViewGasesGraph.loadUrl("file:///android_asset/historical-chart.html");
+        webViewSO2Graph.loadUrl("file:///android_asset/historical-chart.html");
+        webViewCOGraph.loadUrl("file:///android_asset/historical-chart.html");
+        webViewO3Graph.loadUrl("file:///android_asset/historical-chart.html");
+        webViewNO2Graph.loadUrl("file:///android_asset/historical-chart.html");
         webViewAccelerometerGraph.loadUrl("file:///android_asset/historical-chart.html");
         webViewLightGraph.loadUrl("file:///android_asset/historical-chart.html");
         webViewBatteryGraph.loadUrl("file:///android_asset/historical-chart.html");
@@ -118,7 +133,10 @@ public class FragmentHistoricalDashboard extends Fragment {
         cardViewPressureGraph = (CardView) view.findViewById(R.id.cardviewPressureGraph);
         cardViewAccelerometerGraph = (CardView) view.findViewById(R.id.cardviewAccelerometerGraph);
         cardViewCO2Graph = (CardView) view.findViewById(R.id.cardviewCO2Graph);
-        cardViewGasesGraph = (CardView) view.findViewById(R.id.cardviewGasesGraph);
+        cardViewSO2Graph = (CardView) view.findViewById(R.id.cardviewSO2Graph);
+        cardViewCOGraph = (CardView) view.findViewById(R.id.cardviewCOGraph);
+        cardViewO3Graph = (CardView) view.findViewById(R.id.cardviewO3Graph);
+        cardViewNO2Graph = (CardView) view.findViewById(R.id.cardviewNO2Graph);
         cardViewLightGraph = (CardView) view.findViewById(R.id.cardviewLightGraph);
         cardViewBatteryGraph = (CardView) view.findViewById(R.id.cardviewBatteryGraph);
         cardViewRSSIGraph = (CardView) view.findViewById(R.id.cardviewRSSIGraph);
@@ -170,7 +188,10 @@ public class FragmentHistoricalDashboard extends Fragment {
         cardViewPressureGraph.setVisibility(View.GONE);
         cardViewAccelerometerGraph.setVisibility(View.GONE);
         cardViewCO2Graph.setVisibility(View.GONE);
-        cardViewGasesGraph.setVisibility(View.GONE);
+        cardViewSO2Graph.setVisibility(View.GONE);
+        cardViewCOGraph.setVisibility(View.GONE);
+        cardViewO3Graph.setVisibility(View.GONE);
+        cardViewNO2Graph.setVisibility(View.GONE);
         cardViewLightGraph.setVisibility(View.GONE);
         cardViewBatteryGraph.setVisibility(View.GONE);
         cardViewRSSIGraph.setVisibility(View.GONE);
@@ -222,7 +243,7 @@ public class FragmentHistoricalDashboard extends Fragment {
         cardViewPressureGraph.setVisibility(View.GONE);
         cardViewAccelerometerGraph.setVisibility(View.GONE);
         cardViewCO2Graph.setVisibility(View.GONE);
-        cardViewGasesGraph.setVisibility(View.GONE);
+
         cardViewLightGraph.setVisibility(View.GONE);
         cardViewBatteryGraph.setVisibility(View.GONE);
         cardViewRSSIGraph.setVisibility(View.GONE);
@@ -314,7 +335,10 @@ public class FragmentHistoricalDashboard extends Fragment {
     public void renderLightBatteryGases(HashMap<String,String> csvMap) {
         cardViewLightGraph.setVisibility(View.GONE);
         cardViewBatteryGraph.setVisibility(View.GONE);
-        cardViewGasesGraph.setVisibility(View.GONE);
+        cardViewSO2Graph.setVisibility(View.GONE);
+        cardViewCOGraph.setVisibility(View.GONE);
+        cardViewO3Graph.setVisibility(View.GONE);
+        cardViewNO2Graph.setVisibility(View.GONE);
         Log.d(TAG, "Rendering battery/light graphs...");
         String csv;
         csv = csvMap.get("light");
@@ -329,11 +353,29 @@ public class FragmentHistoricalDashboard extends Fragment {
             webViewBatteryGraph.loadUrl("javascript:render_graph('Battery (%)', '" + csv + "')");
             cardViewBatteryGraph.setVisibility(View.VISIBLE);
         }
-        csv = csvMap.get("gases");
+        csv = csvMap.get("SO2");
         if(!csv.equals("")) {
-            csv = "Timestamp,SO2,CO,O3,NO2\\n"+csv;
-            webViewBatteryGraph.loadUrl("javascript:render_graph('SO2,CO,O3,NO2 (ppm)', '" + csv + "')");
-            cardViewBatteryGraph.setVisibility(View.VISIBLE);
+            csv = "Timestamp,SO2\\n"+csv;
+            webViewSO2Graph.loadUrl("javascript:render_graph('SO<sub>2</sub> (ppm)', '" + csv + "')");
+            cardViewSO2Graph.setVisibility(View.VISIBLE);
+        }
+        csv = csvMap.get("CO");
+        if(!csv.equals("")) {
+            csv = "Timestamp,CO\\n"+csv;
+            webViewCOGraph.loadUrl("javascript:render_graph('CO (ppm)', '" + csv + "')");
+            cardViewCOGraph.setVisibility(View.VISIBLE);
+        }
+        csv = csvMap.get("O3");
+        if(!csv.equals("")) {
+            csv = "Timestamp,O3\\n"+csv;
+            webViewO3Graph.loadUrl("javascript:render_graph('O<sub>3</sub> (ppm)', '" + csv + "')");
+            cardViewO3Graph.setVisibility(View.VISIBLE);
+        }
+        csv = csvMap.get("SO2");
+        if(!csv.equals("")) {
+            csv = "Timestamp,NO2\\n"+csv;
+            webViewNO2Graph.loadUrl("javascript:render_graph('NO<sub>2</sub> (ppm)', '" + csv + "')");
+            cardViewNO2Graph.setVisibility(View.VISIBLE);
         }
     }
 

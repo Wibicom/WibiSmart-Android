@@ -19,6 +19,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.location.Location;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.nfc.Tag;
@@ -165,6 +168,8 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
     DataHandler myDataHandler;
     boolean isStoringLocally;
 
+    LocationManager locationManager;
+    private LocationProvider locationProvider;
 
     private final static String TAG = MainActivity.class.getName();
 
@@ -198,6 +203,15 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         mMqttHandler = mMqttHandler.getInstance(this);
 
         myDataHandler = DataHandler.getInstance();
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationProvider = locationManager.getProvider(LocationManager.GPS_PROVIDER);
+        Location location = locationManager.getLastKnownLocation
+                (LocationManager.GPS_PROVIDER);
+
+        locationProvider.supportsAltitude();
+        double altitude = location.getAltitude();
+        Log.d("yay","Altitude-"+altitude + " longitude-"+location.getLongitude()+ " latitude-"+location.getLatitude()+ " speed-"+location.getSpeed());
     }
 
 

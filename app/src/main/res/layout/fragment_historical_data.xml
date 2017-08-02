@@ -271,7 +271,7 @@
 
 
                         <android.support.v7.widget.CardView
-                            android:id="@+id/cardviewGasesGraph"
+                            android:id="@+id/cardviewSO2Graph"
                             android:layout_width="match_parent"
                             android:layout_height="210dp"
                             android:layout_marginBottom="5dp"
@@ -285,7 +285,82 @@
                                 android:layout_height="match_parent">
 
                                 <WebView
-                                    android:id="@+id/webviewGasesGraph"
+                                    android:id="@+id/webviewSO2Graph"
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="fill_parent"
+                                    />
+
+
+                            </LinearLayout>
+
+                        </android.support.v7.widget.CardView>
+
+                        <android.support.v7.widget.CardView
+                            android:id="@+id/cardviewCOGraph"
+                            android:layout_width="match_parent"
+                            android:layout_height="210dp"
+                            android:layout_marginBottom="5dp"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginRight="10dp">
+
+                            <LinearLayout
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <WebView
+                                    android:id="@+id/webviewCOGraph"
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="fill_parent"
+                                    />
+
+
+                            </LinearLayout>
+
+                        </android.support.v7.widget.CardView>
+
+                        <android.support.v7.widget.CardView
+                            android:id="@+id/cardviewO3Graph"
+                            android:layout_width="match_parent"
+                            android:layout_height="210dp"
+                            android:layout_marginBottom="5dp"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginRight="10dp">
+
+                            <LinearLayout
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <WebView
+                                    android:id="@+id/webviewO3Graph"
+                                    android:layout_width="fill_parent"
+                                    android:layout_height="fill_parent"
+                                    />
+
+
+                            </LinearLayout>
+
+                        </android.support.v7.widget.CardView>
+
+                        <android.support.v7.widget.CardView
+                            android:id="@+id/cardviewNO2Graph"
+                            android:layout_width="match_parent"
+                            android:layout_height="210dp"
+                            android:layout_marginBottom="5dp"
+                            android:layout_marginTop="5dp"
+                            android:layout_marginLeft="10dp"
+                            android:layout_marginRight="10dp">
+
+                            <LinearLayout
+                                android:orientation="vertical"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent">
+
+                                <WebView
+                                    android:id="@+id/webviewNO2Graph"
                                     android:layout_width="fill_parent"
                                     android:layout_height="fill_parent"
                                     />

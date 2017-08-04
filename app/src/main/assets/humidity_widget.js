@@ -5,7 +5,7 @@ var HumidityGauge = (function () {
         var opts = {
           lines: 12, // The number of lines to draw
           angle: 0.3, // The length of each line
-          lineWidth: 0.1, // The line thickness
+          lineWidth: 0.15, // The line thickness
 
           limitMax: 'false',   // If true, the pointer will not go past the end of the gauge
           colorStart: '#5bc0de',   // Colors

@@ -14,6 +14,7 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.support.v4.app.Fragment;
+import android.text.Html;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -54,6 +55,8 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
     boolean nonManualLightPeriodChange = false;
     boolean nonManualCO2PeriodChange = false;
     boolean nonManualGasesPeriodChange = false;
+
+    boolean nonManualAltitudeChange = false;
 
     private final static String TAG = FragmentSettingsEnviro.class.getName();
 
@@ -201,17 +204,28 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                 break;
             }
             case "CO2_checkbox_enviro": {
+                CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
                 if (!nonManualCO2CheckboxChange) {
-                    CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
+
                     byte value[] = {0x00};
                     if (checkBoxPreference.isChecked())
-                        value[0] = 0x01;
+                        value[0] = altitudeDependentValue(sensor.getAltitude());
 
-                    sensor.setCO2SensorOn(value[0] == 1);
+                    sensor.setCO2SensorOn(value[0] > 0);
                     UUID uuid = WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO;
                     Log.d(TAG, "CO2 checkbox toggled to " + value[0]);
                     if (sensor.getHasCO2Sensor()) {
                         mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                if(!checkBoxPreference.isChecked()) {
+                    MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).setCO2Calibrating(false);
+                }
+                CheckBoxPreference prefCalibration = (CheckBoxPreference)findPreference("CO2_calibration");
+                if (prefCalibration != null ) {
+                    prefCalibration.setEnabled(checkBoxPreference.isChecked());
+                    if(!prefCalibration.isEnabled()) {
+                        prefCalibration.setChecked(false);
                     }
                 }
                 nonManualCO2CheckboxChange = false;
@@ -230,6 +244,42 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                 nonManualCO2PeriodChange = false;
                 period = period * 100;
                 pref.setSummary(period + " milliseconds");
+                break;
+            }
+            case "altitude": {
+                if (!nonManualAltitudeChange) {
+                    EditTextPreference editTextPref = (EditTextPreference) pref;
+                    sensor.setAltitude(Integer.parseInt(editTextPref.getText()));
+                    if (sensor.getCO2SensorOn()) {
+                        UUID uuid = WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO;
+                        byte[] value = {altitudeDependentValue(sensor.getAltitude())};
+                        Log.d(TAG, "altitude change with sensor on, rewriting value " + value[0] + " for altitude " + sensor.getAltitude());
+                        mListener.writeCharacteristic(uuid, value);
+                    } else {
+                        Log.d(TAG, "altitude change with sensor off recorded value " + sensor.getAltitude());
+                    }
+                }
+                nonManualAltitudeChange = false;
+                break;
+            }
+            case "CO2_calibration": {
+                CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
+                if (getCO2Checkbox()) {
+                    if (checkBoxPreference.isChecked() && !MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getCO2Calibrating()) {
+                        UUID uuid = WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO;
+                        byte[] value = {(byte)0xee};
+                        Log.d(TAG, "clibrating CO2 sensor");
+                        mListener.writeCharacteristic(uuid, value);
+                        checkBoxPreference.setEnabled(false);
+                        MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).setCO2Calibrating(true);
+
+                    } else {
+                        Log.d(TAG, "already calibrating, or done calibrating, either way no change");
+                    }
+                }
+                else {
+                    setCO2CalibrationCheckbox(false);
+                }
                 break;
             }
             case "SO2_checkbox_enviro": {
@@ -361,6 +411,18 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         }
     }
 
+    public byte altitudeDependentValue(int altitude) {
+        double aproxAlt = altitude/100;
+        aproxAlt = Math.round(aproxAlt);
+        aproxAlt += 1;
+        if (aproxAlt != 0xee && aproxAlt > 0) {
+            return (byte) aproxAlt;
+        }
+        else {
+            return 0x01;
+        }
+    }
+
     public void setAccelerometerCheckbox(boolean check)
     {
         CheckBoxPreference pref = (CheckBoxPreference)findPreference("accelerometer_checkbox_enviro");
@@ -416,6 +478,23 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
     public boolean getCO2Checkbox()
     {
         CheckBoxPreference pref = (CheckBoxPreference)findPreference("CO2_checkbox_enviro");
+        if (pref != null)
+            return pref.isChecked();
+        return false;
+    }
+
+    public void setCO2CalibrationCheckbox(boolean check)
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("CO2_calibration");
+        if (pref != null) {
+            pref.setEnabled(getCO2Checkbox());
+            pref.setChecked(check);
+        }
+    }
+
+    public boolean getCO2CalibrationCheckbox()
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("CO2_calibration");
         if (pref != null)
             return pref.isChecked();
         return false;
@@ -561,6 +640,24 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         }
     }
 
+    public void doneCO2Calibration(SensorData sensor) {
+        Log.d(TAG, "done CO2 calibration for device" + sensor.getLocalName());
+
+            if (sensor.getCO2Calibrating()) {
+                Log.d(TAG, "CO2 calibration for device " + sensor.getLocalName() + "finished");
+                sensor.setCO2Calibrating(false);
+            }
+            else {
+                Log.d(TAG, "CO2 calibration for device " + sensor.getLocalName() + "was probably aborted...");
+            }
+            if(MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()) == sensor) {
+                nonManualCO2CheckboxChange = (sensor.getCO2SensorOn());
+                setCO2Checkbox(false);
+                setCO2CalibrationCheckbox(false);
+        }
+
+    }
+
 
 
     @Override
@@ -595,6 +692,8 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
     public interface OnSettingsEnviroListener {
         void writeCharacteristic(UUID uuid, byte[] value);
     }
+
+
 
 
     public void syncSettings() {
@@ -685,6 +784,15 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         setWeatherPeriod(sensor.getLastWeatherPeriod());
         nonManualGasesPeriodChange = (sensor.getLastGasesPeriod() != getGasesPeriod());
         setGasesPeriod(sensor.getLastGasesPeriod());
+
+        EditTextPreference altitudePreference = (EditTextPreference) findPreference("altitude");
+        if(altitudePreference!=null && altitudePreference.getText() != null && !altitudePreference.getText().equals(sensor.getAltitude()+"")) {
+            nonManualAltitudeChange = true;
+            altitudePreference.setText(sensor.getAltitude() + "");
+
+        }
+
+        setCO2CalibrationCheckbox(sensor.getCO2Calibrating());
     }
 
     private void attemptIoTConnection() {

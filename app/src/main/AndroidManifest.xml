@@ -41,7 +41,7 @@
     <!-- </application> -->
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/wibismart_png_ic_launcher"
+        android:icon="@mipmap/wibicom_minilogo_icon"
         android:label="WibiSmart"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">

@@ -65,12 +65,30 @@ android:key="preferenceScreenEnviro">
             android:summary="Set the CO2 sensor on or off"
             android:key="CO2_checkbox_enviro"/>
 
+
+        <EditTextPreference
+
+            android:key="altitude"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:inputType="number"
+            android:title="Altitude"
+            android:summary="Set the altutude of your sensor in meters"/>
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="CO2_calibration"
+            android:title="Calibration"
+            android:summary="Calibration takes x second. The sensor will turn off after calibrating."/>
+
         <wibicom.wibeacon3.SliderDialog
             android:title="Period"
             android:summary="Set the refreshing rate of the sensor"
             android:dialogMessage="Set the refreshing rate of the CO2 sensor"
             android:dialogTitle="Set sensor period"
             android:key="CO2_period_enviro" />
+
+
 
     </PreferenceCategory>
 

@@ -50,6 +50,8 @@ public class SensorData {
 
     private int batteryLevel = 0;
 
+    private int altitude = 0;
+
     //these variables are here to keep track of what sensor is on or off.
     private boolean accelSensorOn = false;
     private boolean weatherSensorOn = false;
@@ -72,11 +74,14 @@ public class SensorData {
     private int lastCO2Period = 50;
     private int lastGasesPeriod = 150;
 
+    private boolean CO2Calibrating = false;
+
     public char[] modelNumberString = {0};
 
-    public SensorData(String localName, String adress) {
+    public SensorData(String localName, String adress, int altitude) {
         this.localName = localName;
         this.adress = adress;
+        this.altitude = altitude;
     }
 
 
@@ -312,6 +317,11 @@ public class SensorData {
 
     public void setLastGasesPeriod(int d) { lastGasesPeriod = d; }
 
+    public int getAltitude() { return altitude; }
 
+    public void setAltitude(int val) { altitude = val;}
 
+    public boolean getCO2Calibrating() { return CO2Calibrating; }
+
+    public void setCO2Calibrating(boolean b) { CO2Calibrating = b; }
 }

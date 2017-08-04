@@ -7,7 +7,7 @@ var PressureGauge = (function () {
         var opts = {
           lines: 12, // The number of lines to draw
           angle: 0.01, // The length of each line
-          lineWidth: 0.20, // The line thickness
+          lineWidth: 0.40, // The line thickness
           pointer: {
             // length: 1, // The radius of the inner circle
             // strokeWidth: 0.030, // The rotation offset

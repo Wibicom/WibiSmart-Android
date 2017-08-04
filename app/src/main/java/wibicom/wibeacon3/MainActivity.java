@@ -170,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
 
     LocationManager locationManager;
     private LocationProvider locationProvider;
+    int altitude=0;
 
     private final static String TAG = MainActivity.class.getName();
 
@@ -209,9 +210,9 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         Location location = locationManager.getLastKnownLocation
                 (LocationManager.GPS_PROVIDER);
 
-        locationProvider.supportsAltitude();
-        double altitude = location.getAltitude();
-        Log.d("yay","Altitude-"+altitude + " longitude-"+location.getLongitude()+ " latitude-"+location.getLatitude()+ " speed-"+location.getSpeed());
+
+        if(location != null) altitude = (int)location.getAltitude();
+        if(altitude < 0) altitude =0;
     }
 
 
@@ -896,7 +897,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         connectedDevicePosition = connectedDevices.size();
         connectedDevice = device;
         connectedDevices.add(connectedDevicePosition, device);
-        sensorDataList.add(connectedDevicePosition, new SensorData(device.getName(), device.getAddress()));
+        sensorDataList.add(connectedDevicePosition, new SensorData(device.getName(), device.getAddress(), altitude));
     }
 
     public SensorData getSensorDataWithAdress(String adress, String localName) {
@@ -906,6 +907,14 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
             }
         }
         return null;
+    }
+
+    public void confirmationCO2Calibration(BluetoothDevice device) {
+        Log.d(TAG, "confirmationCO2Calibration() for device " + device.getName());
+        SensorData sensor = getSensorDataWithAdress(device.getAddress(), device.getName());
+        if (sensor != null && fragmentSettingsEnviro != null) {
+            fragmentSettingsEnviro.doneCO2Calibration(sensor);
+        }
     }
 
     public void connectIot() {

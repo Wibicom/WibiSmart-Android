@@ -7,7 +7,7 @@ function render_progressbar_accelerometer(live_acc, axis){
     if (live_acc>0) {
         firstSegment_progress = "50%";
         secondSegment_progress = (((live_acc/1500) * 100)/2).toString() + "%";
-        thirdSegment_progress = (50 - (((live_acc/1500)*100))/2).toString + "%";
+        thirdSegment_progress = (50 - (((live_acc/1500)*100))/2).toString() + "%";
 
 
     } else if (live_acc<0) {

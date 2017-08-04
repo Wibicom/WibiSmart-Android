@@ -206,7 +206,7 @@
             <android.support.v7.widget.CardView
                 android:id="@+id/cardviewAccelerometer"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
+                android:layout_height="225dp"
                 android:layout_marginBottom="5dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginLeft="10dp"

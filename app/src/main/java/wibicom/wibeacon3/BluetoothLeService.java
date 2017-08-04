@@ -650,25 +650,30 @@ public class BluetoothLeService extends Service {
             } else if (characteristic.getUuid().toString().equals(NORDIC_SENSOR_ACCELEROMETER_DATA_UUID)) {
                 thisSensorData.setAccelerometer(byteArray);
             } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_DATA_CHAR_UUID_ENVIRO)) {
-                thisSensorData.setCO2Enviro(byteArray);
+                if (byteArray[0] == 0xaa && byteArray[0] == 0xaa) {
+                    MainActivity.getInstance().confirmationCO2Calibration(gatt.getDevice());
+                }
+                else {
+                    thisSensorData.setCO2Enviro(byteArray);
 
-                int CO2 = thisSensorData.getCO2Enviro();
-                if ((transmitToCloud || storingLocally) && CO2 != 0) {
-                    Map<String, Object> body = new HashMap<String, Object>();
-                    Map<String, Object> data = new HashMap<String, Object>();
-                    Map<String, Object> d = new HashMap<String, Object>();
-                    d.put("CO2", CO2);
-                    data.put("d", d);
-                    body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
-                    body.put("localName", gatt.getDevice().getName());
-                    body.put("eventType", "CO2");
-                    body.put("timestamp", getCurrentGMTTime());
-                    body.put("data", data);
-                    if(storingLocally) {
-                        DataHandler.getInstance().storeObject(body);
-                    }
-                    if(transmitToCloud) {
-                        DataHandler.getInstance().pushOneFile(body);
+                    int CO2 = thisSensorData.getCO2Enviro();
+                    if ((transmitToCloud || storingLocally) && CO2 > 0) {
+                        Map<String, Object> body = new HashMap<String, Object>();
+                        Map<String, Object> data = new HashMap<String, Object>();
+                        Map<String, Object> d = new HashMap<String, Object>();
+                        d.put("CO2", CO2);
+                        data.put("d", d);
+                        body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
+                        body.put("localName", gatt.getDevice().getName());
+                        body.put("eventType", "CO2");
+                        body.put("timestamp", getCurrentGMTTime());
+                        body.put("data", data);
+                        if (storingLocally) {
+                            DataHandler.getInstance().storeObject(body);
+                        }
+                        if (transmitToCloud) {
+                            DataHandler.getInstance().pushOneFile(body);
+                        }
                     }
                 }
             } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().SPEC_DATA_CHAR_UUID_ENVIRO)) {

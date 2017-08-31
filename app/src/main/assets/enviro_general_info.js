@@ -21,8 +21,14 @@ function set_rssi(rssi){
 
 function set_battery(battery){
     document.getElementById("batteryvalue").innerHTML = battery + " %";
-    
-    document.getElementById("batteryLevel").style.width = battery + "%";
+
+    if (battery > 100) {
+        document.getElementById("batteryLevel").style.width = "100%";
+    }
+    else {
+        document.getElementById("batteryLevel").style.width = battery + "%";
+    }
+
     if(battery <= 20) {
         document.getElementById("batteryLevel").style.background = "#e20d0d";
     }

@@ -28,6 +28,11 @@ import wibicom.wibeacon3.R;
 import wibicom.wibeacon3.SensorData;
 import wibicom.wibeacon3.WibiSmartGatt;
 
+/**
+ * @author Michael Vaquier
+ * This fragment is the view to the Live Dashboard for enviro devices
+ * it is updated whenever we reciecve a notificeation from one of the services from the selected device.
+ */
 
 public class FragmentDashboardEnviro extends Fragment {
 
@@ -47,17 +52,23 @@ public class FragmentDashboardEnviro extends Fragment {
     WebView webViewTemperature;
     WebView webViewHumidity;
     WebView webViewPressure;
+    WebView webViewUV;
+    WebView webViewUVlabel;
     WebView webViewCO2;
     WebView webViewSO2;
     WebView webViewCO;
     WebView webViewO3;
     WebView webViewNO2;
+    WebView webViewPM;
+    WebView webViewSound;
     WebView webViewAccelerometer;
     WebView webViewGeneralInfo;
 
     CardView cardViewTemperature;
     CardView cardViewHumidity;
     CardView cardViewPressure;
+    CardView cardViewUV;
+    CardView cardViewSound;
     CardView cardViewGases;
     CardView cardViewAccelerometer;
 
@@ -102,23 +113,37 @@ public class FragmentDashboardEnviro extends Fragment {
         });
         webViewHumidity = (WebView) view.findViewById(R.id.webviewHumidity);
         webViewPressure = (WebView) view.findViewById(R.id.webviewPressure);
+        webViewUV = (WebView) view.findViewById(R.id.webviewUV);
+        webViewUVlabel = (WebView) view.findViewById(R.id.webviewUVlabel);
         webViewCO2 = (WebView) view.findViewById(R.id.webviewCO2);
         webViewSO2 = (WebView) view.findViewById(R.id.webviewSO2);
         webViewCO = (WebView) view.findViewById(R.id.webviewCO);
         webViewO3 = (WebView) view.findViewById(R.id.webviewO3);
         webViewNO2 = (WebView) view.findViewById(R.id.webviewNO2);
+        webViewPM = (WebView) view.findViewById(R.id.webviewPM);
+        webViewSound = (WebView) view.findViewById(R.id.webviewSound);
         webViewAccelerometer = (WebView) view.findViewById(R.id.webviewAccelerometer);
         webViewGeneralInfo = (WebView) view.findViewById(R.id.webview_general_info);
+        webViewGeneralInfo.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return (event.getAction() == MotionEvent.ACTION_MOVE);
+            }
+        });
 
         // Enable JavaScript
         webViewTemperature.getSettings().setJavaScriptEnabled(true);
         webViewHumidity.getSettings().setJavaScriptEnabled(true);
         webViewPressure.getSettings().setJavaScriptEnabled(true);
+        webViewUV.getSettings().setJavaScriptEnabled(true);
+        webViewUVlabel.getSettings().setJavaScriptEnabled(true);
         webViewCO2.getSettings().setJavaScriptEnabled(true);
         webViewSO2.getSettings().setJavaScriptEnabled(true);
         webViewCO.getSettings().setJavaScriptEnabled(true);
         webViewO3.getSettings().setJavaScriptEnabled(true);
         webViewNO2.getSettings().setJavaScriptEnabled(true);
+        webViewPM.getSettings().setJavaScriptEnabled(true);
+        webViewSound.getSettings().setJavaScriptEnabled(true);
         webViewAccelerometer.getSettings().setJavaScriptEnabled(true);
         webViewGeneralInfo.getSettings().setJavaScriptEnabled(true);
 
@@ -127,11 +152,16 @@ public class FragmentDashboardEnviro extends Fragment {
         webViewTemperature.loadUrl("file:///android_asset/temperature_widget_min.html");
         webViewHumidity.loadUrl("file:///android_asset/humidity_widget_min.html");
         webViewPressure.loadUrl("file:///android_asset/pressure_widget_min.html");
+        webViewUV.loadUrl("file:///android_asset/UV_widget_min.html");
+        webViewUVlabel.loadUrl("file:///android_asset/UVLabel.html");
         webViewCO2.loadUrl("file:///android_asset/CO2_widget_min.html");
         webViewSO2.loadUrl("file:///android_asset/SO2_widget_min.html");
         webViewCO.loadUrl("file:///android_asset/CO_widget_min.html");
         webViewO3.loadUrl("file:///android_asset/O3_widget_min.html");
         webViewNO2.loadUrl("file:///android_asset/NO2_widget_min.html");
+        webViewPM.loadUrl("file:///android_asset/PM_widget_min.html");
+        webViewSound.loadUrl("file:///android_asset/sound_widget.html");
+
         webViewAccelerometer.loadUrl("file:///android_asset/accelerometer_widget_min.html");
 
 
@@ -142,6 +172,8 @@ public class FragmentDashboardEnviro extends Fragment {
         cardViewTemperature = (CardView) view.findViewById(R.id.cardviewTemperature);
         cardViewHumidity = (CardView) view.findViewById(R.id.cardviewHumidity);
         cardViewPressure = (CardView) view.findViewById(R.id.cardviewPressure);
+        cardViewUV = (CardView) view.findViewById(R.id.cardviewUV);
+        cardViewSound = (CardView) view.findViewById(R.id.cardviewSound);
         cardViewAccelerometer = (CardView) view.findViewById(R.id.cardviewAccelerometer);
         cardViewGases = (CardView) view.findViewById(R.id.cardviewGases);
 
@@ -150,7 +182,8 @@ public class FragmentDashboardEnviro extends Fragment {
         return view;
     }
 
-    public void updateData(String name, float temperature, float pressure, float humidity, float accelerometerX, float accelerometerY, float accelerometerZ, int batteryLevel, int rssi, int light, int CO2, float SO2, float CO, float O3, float NO2)
+    //This function is called from the main activity when there is a notification from the selected device.
+    public void updateData(String name, float temperature, float pressure, float humidity, int UV, float accelerometerX, float accelerometerY, float accelerometerZ, int batteryLevel, int rssi, int light, int CO2, float SO2, float CO, float O3, float NO2, float PM, int sound)
     {
         //webViewTemperature.loadUrl("file:///android_asset/temperature_widget.html");
         //webViewTemperature.loadUrl("javascript:updateTemperature()");
@@ -160,7 +193,10 @@ public class FragmentDashboardEnviro extends Fragment {
             webViewHumidity.loadUrl("javascript:updateHumidity(" + Float.toString(humidity) + ")");
         if(webViewPressure != null)
             webViewPressure.loadUrl("javascript:updatePressure(" + Float.toString(pressure) + ")");
-
+        if (webViewUV != null && webViewUVlabel != null) {
+            webViewUV.loadUrl("javascript:updateUV(" + UV + ")");
+            webViewUVlabel.loadUrl("javascript:updateUVLabel(" + UV + ")");
+        }
         if(webViewAccelerometer != null)
             webViewAccelerometer.loadUrl("javascript:set_accelerometer_data(" + Float.toString(accelerometerX) + ", " + Float.toString(accelerometerY) + ", " + Float.toString(accelerometerZ) + ")");
 
@@ -173,11 +209,15 @@ public class FragmentDashboardEnviro extends Fragment {
         if(webViewCO2 != null) {
             webViewCO2.loadUrl("javascript:updateCO2(" + Integer.toString(CO2) + ")");
         }
-        if(webViewSO2 != null && webViewCO != null && webViewO3 != null && webViewNO2 != null) {
+        if(webViewSO2 != null && webViewCO != null && webViewO3 != null && webViewNO2 != null && webViewPM != null) {
             webViewSO2.loadUrl("javascript:updateSO2(" + Float.toString(SO2) + ")");
             webViewCO.loadUrl("javascript:updateCO(" + Float.toString(CO) + ")");
             webViewO3.loadUrl("javascript:updateO3(" + Float.toString(O3) + ")");
             webViewNO2.loadUrl("javascript:updateNO2(" + Float.toString(NO2) + ")");
+            webViewPM.loadUrl("javascript:updatePM(" + Float.toString(PM) + ")");
+        }
+        if(webViewSound != null) {
+            webViewSound.loadUrl("javascript:updateSound(" + sound + ")");
         }
         else
             this.batteryLevel = batteryLevel;
@@ -227,6 +267,7 @@ public class FragmentDashboardEnviro extends Fragment {
 
     }
 
+    //This function is called at the end of the connection precess of a new devicec and also whenever we select a device. Its purpose is to show only the sensors that the device has.
     public void hideSensors()
     {
         Log.d(TAG, "entering .hideSensors()");
@@ -237,12 +278,15 @@ public class FragmentDashboardEnviro extends Fragment {
             boolean CO2Service = false;
             boolean accelerometerService = false;
             boolean gasesService = false;
+            boolean micService = false;
             if (cardViewGases != null) {
                 cardViewGases.setVisibility(View.VISIBLE);
                 cardViewTemperature.setVisibility(View.VISIBLE);
                 cardViewHumidity.setVisibility(View.VISIBLE);
                 cardViewPressure.setVisibility(View.VISIBLE);
+                cardViewUV.setVisibility(View.VISIBLE);
                 cardViewAccelerometer.setVisibility(View.VISIBLE);
+                cardViewSound.setVisibility(View.VISIBLE);
             }
 
             WibiSmartGatt gatt = WibiSmartGatt.getInstance();
@@ -263,6 +307,9 @@ public class FragmentDashboardEnviro extends Fragment {
                     sensor.setHasGasesSensor(true);
                     gasesService = true;
                 }
+                else if (tempService.getUuid().toString().equals(gatt.MIC_SERVICE_UUID_ENVIRO.toString())) {
+                    micService = true;
+                }
 
             }
 
@@ -276,6 +323,7 @@ public class FragmentDashboardEnviro extends Fragment {
                 webViewCO.setVisibility(View.GONE);
                 webViewO3.setVisibility(View.GONE);
                 webViewNO2.setVisibility(View.GONE);
+                webViewPM.setVisibility(View.GONE);
             }
             else if(!CO2Service && gasesService && webViewSO2 != null && webViewCO != null && webViewO3 != null && webViewNO2 != null && webViewCO2 != null && cardViewGases != null) {
                 webViewCO2.setVisibility(View.INVISIBLE);
@@ -283,6 +331,7 @@ public class FragmentDashboardEnviro extends Fragment {
                 webViewCO.setVisibility(View.VISIBLE);
                 webViewO3.setVisibility(View.VISIBLE);
                 webViewNO2.setVisibility(View.VISIBLE);
+                webViewPM.setVisibility(View.VISIBLE);
             }
             else if(CO2Service && gasesService && webViewSO2 != null && webViewCO != null && webViewO3 != null && webViewNO2 != null && webViewCO2 != null && cardViewGases != null) {
                 webViewCO2.setVisibility(View.VISIBLE);
@@ -290,15 +339,20 @@ public class FragmentDashboardEnviro extends Fragment {
                 webViewCO.setVisibility(View.VISIBLE);
                 webViewO3.setVisibility(View.VISIBLE);
                 webViewNO2.setVisibility(View.VISIBLE);
+                webViewPM.setVisibility(View.VISIBLE);
             }
 
             if (!weatherSevice && cardViewTemperature != null && cardViewHumidity != null && cardViewPressure != null) {
                 cardViewTemperature.setVisibility(View.GONE);
                 cardViewHumidity.setVisibility(View.GONE);
                 cardViewPressure.setVisibility(View.GONE);
+                cardViewUV.setVisibility(View.GONE);
             }
             if (!accelerometerService && cardViewAccelerometer != null) {
                 cardViewAccelerometer.setVisibility(View.GONE);
+            }
+            if (!micService && cardViewSound != null) {
+                cardViewSound.setVisibility(View.GONE);
             }
 
         }

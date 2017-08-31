@@ -45,6 +45,8 @@ import java.util.UUID;
 
 /**
  * @desc This class is a sevice that manage all the bluetooth operations for the MainActivity.
+ * Beware that you can only read or write bluetooth characteristics one at a time; this is why we have implemented some queues and a read/write next characteristics method.
+ * Once a device connects, the procedure goes as follows; we first get all the services, read all characteristic in each service, subscribe to all Data characteristic to be notified when we recieve data.
  * @author Olivier Tessier-Lariviere
  */
 public class BluetoothLeService extends Service {
@@ -83,6 +85,9 @@ public class BluetoothLeService extends Service {
     private static final String CO2_CONF_CHAR_UUID = "0000cc32-0000-1000-8000-00805f9b34fb";
     private static final String CO2_PEROÏOD_CHAR_UUID = "0000cc34-0000-1000-8000-00805f9b34fb";
 
+    private static final String MIC_SERVICE_UUID = "0000fff0-0000-1000-8000-00805F9B34FB";
+    private static final String MIC_LEVEL_CHAR_UUID = "0000fff4-0000-1000-8000-00805f9b34fb";
+
     private static final String MODEL_NUMBER_STRING_CHAR_UUID = "00002a24-0000-1000-8000-00805f9b34fb";
     private static final String TI_ACCELEROMETER_DATA_CHAR_UUID = "0000aa81-0000-1000-8000-00805f9b34fb";
 
@@ -102,6 +107,7 @@ public class BluetoothLeService extends Service {
     public final static char[] MOVE_MODEL_NUMBER_STRING = {'0', '0', '0', '1'};
     public final static char[] ENVIRO_MODEL_NUMBER_STRING = {'E', 'n', 'v', 'i', 'r', 'o'};
     public final static char[] ENVIRO_MODEL_NUMBER_STRING_TEMP = {'M', 'o', 'd', 'e', 'l', ' ', 'N', 'u', 'm', 'b', 'e', 'r'};
+    public final static char[] ENVIRO_AIR_MODEL_NUMBER_STRING = {'M', 'o', 'd', 'e', 'l', ' ', 'E', 'n', 'v', 'A', 'i', 'r'};
 
     boolean isBusyWritting = false;
 
@@ -214,21 +220,23 @@ public class BluetoothLeService extends Service {
         }
     }
 
+    //This method is called whenever we want to write a bluetooth characteristic, for example to toggle a sensor or change the period.
     public void addToWriteQueue(UUID uuid, byte[] value)
     {
         Log.d(TAG, "entering addToWriteQueue() for uuid " + uuid.toString() + " and value " + value[0] + ".");
         characteristicToWriteQueue.add(new Pair(uuid, value));
-        if(!isBusyWritting) {
+        if(!isBusyWritting) { //if we are not aloready writing a characteristic, we can directly write the next characteristic in queue
             Log.d(TAG, "addToWriteQueue() not busy writing, calling writeNextCharacteristicInQueue()");
             writeNextCharacteristicInQueue();
         }
-        else {
+        else { // if we are already busy writing, we spimply just place the characteristic in the queue.
             if(characteristicQueue != null)
             Log.d(TAG, "addToWriteQueue() was busy writing, current Queue length " + characteristicToWriteQueue.size());
         }
 
     }
 
+    //This function will write a value inn ht enet characteristic in the writing queue.
     private void writeNextCharacteristicInQueue()
     {
         Log.d(TAG, "entering writeNextCharacteristicInQueue()");
@@ -247,7 +255,7 @@ public class BluetoothLeService extends Service {
             isBusyWritting = true;
         }
         else
-        {
+        { // if the queue is empty we are no longer busy writing.
             isBusyWritting = false;
         }
     }
@@ -299,7 +307,7 @@ public class BluetoothLeService extends Service {
         mBluetoothGattList.add(mBluetoothGatt);
     }
 
-    public void readRemoteRssi()
+    public void readRemoteRssi() //this function will get the rssi of all devices every time it is called.
     {
         for(BluetoothGatt gatt: mBluetoothGattList) {
             gatt.readRemoteRssi();
@@ -331,6 +339,7 @@ public class BluetoothLeService extends Service {
         sendBroadcast(intent);
     }
 
+    //This is the most important part, this here deals with all the bluetooth callbacks.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -368,7 +377,7 @@ public class BluetoothLeService extends Service {
             }
         }
         @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) { //This is the callback when we write a characteristic.
             Log.d(TAG, "entering .onCharacteristicWrite()");
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.d(TAG, ".onCharacteristicWrite() successfully written characteristic " + characteristic.getUuid().toString() + " for device " + gatt.getDevice().getName() + ".");
@@ -377,7 +386,7 @@ public class BluetoothLeService extends Service {
                 }
             }
 
-            writeNextCharacteristicInQueue();
+            writeNextCharacteristicInQueue(); //since this event is trigered once we are done writing a characteristic, we can then write the next characteristic in the queue
         }
 
         @Override
@@ -416,19 +425,20 @@ public class BluetoothLeService extends Service {
             writeCharacteristicsDescriptor();
         }
 
+        //This is the most important callback, it triggers when we get notified from one of the data characteristics of one of the device.
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
             Log.d(TAG, "entering .onCharacteristicChanged() for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + " for characteristic " + characteristic.getUuid() + ".");
             updateCharacteristicValue(gatt, characteristic);
-            if(gatt.getDevice().getAddress().equals(mBluetoothGatt.getDevice().getAddress())) {
+            if(gatt.getDevice().getAddress().equals(mBluetoothGatt.getDevice().getAddress())) { // if the update comes from the device that is currently selected, we can update the dashboard.
                 Log.d(TAG, "onCharacteristicChanged() broatcasting to main, current selected device " + mBluetoothGatt.getDevice().getName());
                 broadcastUpdate(ACTION_GATT_NOTIFY);
             }
         }
 
         @Override
-        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) { //this callback is trigered when we get a response reading the rssi of a device
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.d(TAG, "entering .onReadRemoteRssi() for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + " with rssi " + rssi + ".");
                 MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).setRssi(rssi);
@@ -464,7 +474,7 @@ public class BluetoothLeService extends Service {
 
     };
 
-    private void addCharacteristicNotifyQueue(BluetoothGattCharacteristic characteristic)
+    private void addCharacteristicNotifyQueue(BluetoothGattCharacteristic characteristic) //If the characteristic is a data characteristic, add it to the notify queue
     {
         if(characteristic.getUuid().toString().equals(NORDIC_SENSOR_TEMPERATURE_DATA_UUID)
                 || characteristic.getUuid().toString().equals(NORDIC_SENSOR_VSOLAR_DATA_UUID)
@@ -474,15 +484,16 @@ public class BluetoothLeService extends Service {
                 || characteristic.getUuid().toString().equals(NORDIC_SENSOR_ACCELEROMETER_DATA_UUID)
                 || characteristic.getUuid().equals(WibiSmartGatt.getInstance().LIGHT_DATA_CHAR_UUID_ENVIRO)
                 || characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_DATA_CHAR_UUID_ENVIRO)
-                || characteristic.getUuid().equals(WibiSmartGatt.getInstance().SPEC_DATA_CHAR_UUID_ENVIRO))
+                || characteristic.getUuid().equals(WibiSmartGatt.getInstance().SPEC_DATA_CHAR_UUID_ENVIRO)
+                || characteristic.getUuid().equals(WibiSmartGatt.getInstance().MIC_DATA_CHAR_UUID_ENVIRO))
         {
             characteristicSetNotifyQueue.add(characteristic);
         }
 
     }
 
-    private void updateCharacteristicValue(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
-    {
+    private void updateCharacteristicValue(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) //This function is called whenever there is a notification update.
+    { //depending on which characteristic it is, we execute a different task, if the pushToCloud or storeLocally option is active we send the data at the appropriate place
         SensorData thisSensorData = MainActivity.getInstance().getSensorDataWithAdress(gatt.getDevice().getAddress(), gatt.getDevice().getName());
         if(thisSensorData == null) {
             gatt.disconnect();
@@ -540,7 +551,7 @@ public class BluetoothLeService extends Service {
                 }
 
             } else if (characteristic.getUuid().toString().equals(TI_BAROMETER_DATA_CHAR_UUID)) {
-                int[] weatherTi = new int[9];
+                int[] weatherTi = new int[byteArray.length];
                 for (int i = 0; i < byteArray.length; i++) {
                     weatherTi[i] = byteArray[i] & 0xFF;
                 }
@@ -549,18 +560,20 @@ public class BluetoothLeService extends Service {
                 float temperature = thisSensorData.getTemperatureEnviro();
                 float humidity = thisSensorData.getHumidityEnviro();
                 float pressure = thisSensorData.getPressureEnviro();
+                int UV = thisSensorData.getUVEnviro();
                 /*if (transmitToCloud && MqttHandler.getInstance(MainActivity.getInstance()).isConnected() && (weather[0] != 0 || weather[1] != 0 || weather[2] != 0)) {
                     String message = "{'deviceId' : " + gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase() + ", 'localName' : '" + gatt.getDevice().getName() + "', 'd' : { 'temperature' : '" + weather[0] + "', 'pressure' : '" + weather[1] + "', 'humidity' : '" + weather[2] + "' }}";
                     Log.d(TAG, "publishing weather for device " + gatt.getDevice().getName() + " with adress " + gatt.getDevice().getAddress() + ".");
                     MqttHandler.getInstance(MainActivity.getInstance()).publish(MqttHandler.getInstance(MainActivity.getInstance()).getTopicAir(), message);
                 }*/
-                if((transmitToCloud || storingLocally) && (temperature != 0 || pressure != 0 || humidity != 0)) {
+                if((transmitToCloud || storingLocally) && (temperature != 0 || pressure != 0 || humidity != 0 || UV != 0)) {
                     Map<String, Object> body = new HashMap<String, Object>();
                     Map<String, Object> data = new HashMap<String, Object>();
                     Map<String, Object> d = new HashMap<String, Object>();
                     d.put("temperature", temperature);
                     d.put("pressure", pressure);
                     d.put("humidity", humidity);
+                    d.put("UV", UV);
                     data.put("d", d);
                     body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
                     body.put("localName", gatt.getDevice().getName());
@@ -650,7 +663,8 @@ public class BluetoothLeService extends Service {
             } else if (characteristic.getUuid().toString().equals(NORDIC_SENSOR_ACCELEROMETER_DATA_UUID)) {
                 thisSensorData.setAccelerometer(byteArray);
             } else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().CO2_DATA_CHAR_UUID_ENVIRO)) {
-                if (byteArray[0] == 0xaa && byteArray[0] == 0xaa) {
+                if (byteArray[0] == -86 && byteArray[1] == -86) {
+                    Log.d(TAG, "CO2 sensor done calibrating.");
                     MainActivity.getInstance().confirmationCO2Calibration(gatt.getDevice());
                 }
                 else {
@@ -683,7 +697,8 @@ public class BluetoothLeService extends Service {
                 float CO = thisSensorData.getCOEnviro();
                 float O3 = thisSensorData.getO3Enviro();
                 float NO2 = thisSensorData.getNO2Enviro();
-                if ((transmitToCloud || storingLocally) && (SO2 != 0 || CO != 0 || O3 != 0 || NO2 != 0)) {
+                float PM = thisSensorData.getParticulateMatterEnviro();
+                if ((transmitToCloud || storingLocally) && (SO2 != 0 || CO != 0 || O3 != 0 || NO2 != 0 || PM != 0)) {
                     Map<String, Object> body = new HashMap<String, Object>();
                     Map<String, Object> data = new HashMap<String, Object>();
                     Map<String, Object> d = new HashMap<String, Object>();
@@ -691,6 +706,7 @@ public class BluetoothLeService extends Service {
                     d.put("CO", CO);
                     d.put("O3", O3);
                     d.put("NO2", NO2);
+                    d.put("PM", PM);
                     data.put("d", d);
                     body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
                     body.put("localName", gatt.getDevice().getName());
@@ -704,7 +720,33 @@ public class BluetoothLeService extends Service {
                         DataHandler.getInstance().pushOneFile(body);
                     }
                 }
-            } else {
+            }
+            else if (characteristic.getUuid().equals(WibiSmartGatt.getInstance().MIC_DATA_CHAR_UUID_ENVIRO)) {
+                thisSensorData.setSoundEnviro(byteArray);
+
+                int sound = thisSensorData.getSoundEnviro();
+
+                if (storingLocally || transmitToCloud) {
+                    Map<String, Object> body = new HashMap<String, Object>();
+                    Map<String, Object> data = new HashMap<String, Object>();
+                    Map<String, Object> d = new HashMap<String, Object>();
+                    d.put("soundLevel", sound);
+                    data.put("d", d);
+                    body.put("deviceId", gatt.getDevice().getAddress().replaceAll(":", "").toLowerCase());
+                    body.put("localName", gatt.getDevice().getName());
+                    body.put("eventType", "sound");
+                    body.put("timestamp", getCurrentGMTTime());
+                    body.put("data", data);
+                    if(storingLocally) {
+                        DataHandler.getInstance().storeObject(body);
+                    }
+                    if(transmitToCloud) {
+                        DataHandler.getInstance().pushOneFile(body);
+                    }
+                }
+
+            }
+            else {
                 updateSettingsValue(characteristic);
             }
         }
@@ -766,7 +808,8 @@ public class BluetoothLeService extends Service {
 
     }
 
-    public void clearWritingQueue() {
+    public void clearWritingQueue() { //sometimes, the writing queue is stuck into a isBusyWriting state if the callback was never triggered due to an error.
+        //This function therefore clears the writing queue and sets the isBusyWriting varioble to fase, this is called when there is a disconnection, in case the device disconnects while reading its characteristics.
         Log.d(TAG, "entering .clearWritingQueue()");
         int counter = 0;
         if(characteristicToWriteQueue != null) {
@@ -807,7 +850,7 @@ public class BluetoothLeService extends Service {
     }
 
 
-    public String getCurrentGMTTime() {
+    public String getCurrentGMTTime() { //This is a helper function to get the current gmt time in the form of a json date string. YYYY-MM-DDThh:mm:ss.sssZ
         String out;
         Date date = new Date();
         char[] miliseconds = (date.getTime()+"").toCharArray();

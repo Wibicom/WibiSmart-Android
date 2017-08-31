@@ -114,6 +114,7 @@ import wibicom.wibeacon3.Settings.FragmentSettingsMove;
  * @desc This class is the main activity of the app. It holds the logic for
  * the scanner, the dashboard and the device settings.
  * @author Olivier Tessier-Lariviere
+ * @author Michael Vaquier
  */
 @TargetApi(21)
 public class MainActivity extends AppCompatActivity implements /*BeaconConsumer, RangeNotifier,*/ FragmentScanner.OnListFragmentInteractionListener, FragmentLocalStorage.OnLocalStorageInteractionListener, FragmentPushToCloud.OnPushToCloudInteractionListener, FragmentSettingsEnviro.OnSettingsEnviroListener, FragmentSettingsMove.OnSettingsMoveListener {//, FragmentDashboardMove.OnFragmentInteractionListener {
@@ -130,8 +131,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeService mBluetoothLeService;
-
-    Queue<BluetoothGattCharacteristic> serviceQueue;
+    
 
     private boolean isScanStarted = false;
     private boolean isConnected = false;
@@ -486,9 +486,9 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
                     mBluetoothLeService.readRemoteRssi();
                     setEnviroUi();
 
-                    fragmentDashboardEnviro.updateData(sensor.getLocalName(), sensor.getTemperatureEnviro(), sensor.getPressureEnviro(), sensor.getHumidityEnviro(),
+                    fragmentDashboardEnviro.updateData(sensor.getLocalName(), sensor.getTemperatureEnviro(), sensor.getPressureEnviro(), sensor.getHumidityEnviro(), sensor.getUVEnviro(),
                             sensor.getAccelerometerX(), sensor.getAccelerometerY(), sensor.getAccelerometerZ(),
-                            sensor.getBatteryLevel(), sensor.getRssi(), sensor.getLightEnviro(), sensor.getCO2Enviro(), sensor.getSO2Enviro(), sensor.getCOEnviro(), sensor.getO3Enviro(), sensor.getNO2Enviro());
+                            sensor.getBatteryLevel(), sensor.getRssi(), sensor.getLightEnviro(), sensor.getCO2Enviro(), sensor.getSO2Enviro(), sensor.getCOEnviro(), sensor.getO3Enviro(), sensor.getNO2Enviro(), sensor.getParticulateMatterEnviro(), sensor.getSoundEnviro());
                 }
             } else {
                 Log.d(TAG, ".updateDashboard() sensorData was not found.");
@@ -690,6 +690,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
 //        finish();
 //    }
 
+    //This event triggers when we click on a discovered device to connect to it.
     @Override
     public void onListFragmentInteraction(String localName, String adress, int position) {
         Log.d(TAG, "entering .onListFragmentIteraction()");
@@ -725,6 +726,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
                 .setAction("Action", null).show();
     }*/
 
+    //This event triggers when we click on a connected device to select it
     @Override
     public void onConnectedListFragmentInteraction(String localName, String adress) {
         Log.d(TAG, "entering onConnectedListFragmentIteraction() for device " + localName + " with adress " + adress);
@@ -914,6 +916,7 @@ public class MainActivity extends AppCompatActivity implements /*BeaconConsumer,
         SensorData sensor = getSensorDataWithAdress(device.getAddress(), device.getName());
         if (sensor != null && fragmentSettingsEnviro != null) {
             fragmentSettingsEnviro.doneCO2Calibration(sensor);
+            displaySnackbar("CO2 calibration of " + device.getName() + " done!");
         }
     }
 

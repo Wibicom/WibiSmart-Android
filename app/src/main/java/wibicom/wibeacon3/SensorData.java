@@ -11,6 +11,7 @@ import java.util.Vector;
 
 /**
  * @desc This class transform the received byte into readable data
+ * each enviro has a sensordata instance asociated with it and it is stored in the list of SensorData in the main activity.
  * @author Olivier Tessier-Lariviere
  */
 public class SensorData {
@@ -33,12 +34,17 @@ public class SensorData {
     private float temperatureEnviro = 0;
     private float pressureEnviro = 0;
     private float humidityEnviro = 0;
+    private int UVEnviro = 0;
+    private int luxEnviro = 0;
 
     private int CO2Enviro = 0;
     private float SO2Enviro = 0;
     private float COEnviro = 0;
     private float O3Enviro = 0;
     private float NO2Enviro = 0;
+    private float particulateMatterEnviro = 0;
+
+    private int soundEnviro = 0;
 
     private float accelerometerX = 0;
     private float accelerometerY = 0;
@@ -61,6 +67,7 @@ public class SensorData {
     private boolean COSensorOn = false;
     private boolean O3SensorOn = false;
     private boolean NO2SensorOn = false;
+    private boolean PMSensorOn = false;
 
     private boolean hasAccelSensor = false;
     private boolean hasWeatherSensor = false;
@@ -101,14 +108,48 @@ public class SensorData {
         temperatureEnviro = Math.round((float)(weather[2] * 0x10000 + weather[1] * 0x100 + weather[0]) / 100 * 10)/10f;
         pressureEnviro = Math.round((float)(weather[5] * 0x10000 + weather[4] * 0x100 + weather[3]) / 100 * 10)/10f;
         humidityEnviro = Math.round(((float)(weather[8] * 0x10000 + weather[7] * 0x100 + weather[6])) / (float)Math.pow(2, 10) * 10 * 10)/10f;
+        if(weather.length > 16) {
+            double a = 1.761679358;
+            double b = 0.750257081;
+            double c = 2.730808808;
+            double d = 0.825260014;
+            double UVAresp = 0.00075;
+            double UVBresp = 0.0009;
+
+            int UVA = weather[10] * 0x100 + weather[9];
+            int UVB = weather[12] * 0x100 + weather[11];
+            int UVAcomp = weather[14] * 0x100 + weather[13];
+            int UVBcomp = weather[16] * 0x100 + weather[15];
+
+            double UVIA = (UVA - a * UVAcomp - b * UVBcomp) * UVAresp;
+            double UVIB = (UVB - c * UVAcomp - d * UVBcomp) * UVBresp;
+
+            double UVI = (UVIA + UVIB) / 2;
+            Log.d("UVupdate", "UV: " + UVI);
+
+            if(UVI < 0) {
+                UVEnviro = 0;
+            }
+            else {
+                UVEnviro = (int) Math.round(UVI);
+            }
+        }
+
     }
 
 
     public void setCO2Enviro(byte[] CO2)
     {
+        int co2 = 0;
         //Log.d("CO222", CO2.length+"");
         //Log.d("yayCO2", CO2[0]+ " "+ CO2[1]+ " "+ CO2[2]+ " "+ CO2[3]+ " "+ CO2[4]+ " "+ CO2[4]+ " "+ CO2[5]+ " "+ CO2[6]+ " "+ CO2[7]+ " "+ CO2[8]+ " "+ CO2[9]+ " "+ CO2[10]+ " "+ CO2[11]+ " "+ CO2[12]+ " "+ CO2[13]+ " "+ CO2[14]+ " "+ CO2[15]);
-        CO2Enviro = Math.round(((int)((CO2[3]-48) * 10000 + (CO2[4]-48)*1000 + (CO2[5]-48)*100 + (CO2[6]-48)*10 + (CO2[7]-48))) * 10)/10;
+
+        if( CO2[0]==32 && CO2[1] == 90) {
+            co2 = Math.round(((int) ((CO2[3] - 48) * 10000 + (CO2[4] - 48) * 1000 + (CO2[5] - 48) * 100 + (CO2[6] - 48) * 10 + (CO2[7] - 48))) * 10) / 10;
+        }
+        if(co2 >= 0) {
+            CO2Enviro = (int)Math.round( co2 * (1 + 0.001 * ( 1013 + ( 1013 * Math.pow( 1 - 2.25577 * altitude * Math.pow(10,-5) , 5.25588)))));
+        }
     }
 
     public void setAccelerometer(byte[] accelerometerData)
@@ -122,11 +163,18 @@ public class SensorData {
     public void setGases(byte[] gasesData) {
         //Log.d("yaygas",gasesData[0] + " " + gasesData[1] + " " + gasesData[2] + " " + gasesData[3] + " " + gasesData[4] + " " + gasesData[5] + " " + gasesData[6] + " " + gasesData[7] +" "+ gasesData[8] + " " + gasesData[9] + " " + gasesData[10] + " " + gasesData[11] +" " +gasesData[12] + " " + gasesData[13] + " " + gasesData[14] + " " + gasesData[15]);
         //Log.d("yaygas", convert(gasesData[0]) + " " + convert(gasesData[1]) + " " + convert(gasesData[2]) + " " + convert(gasesData[3]) + " " + convert(gasesData[4]) + " " + convert(gasesData[5]) + " " + convert(gasesData[6]) + " " + convert(gasesData[7]) +" "+ convert(gasesData[8]) + " " + convert(gasesData[9]) + " " + convert(gasesData[10]) + " " + convert(gasesData[11]) +" " +convert(gasesData[12]) + " " + convert(gasesData[13]) + " " + convert(gasesData[14]) + " " + convert(gasesData[15]));
-        SO2Enviro = (float) Math.round(100 * ((Integer.parseInt(specParser(gasesData,4,7), 16) * Math.pow(10, -6)) - 1.25)/0.0045852)/100;
-        COEnviro = (float) Math.round(100 * ((Integer.parseInt(specParser(gasesData,0,3), 16) * Math.pow(10, -6)) - 1.25)/0.0008940)/100;
-        O3Enviro = (float) Math.round(100 * ((Integer.parseInt(specParser(gasesData,8,11), 16) * Math.pow(10, -6)) - 1.25)/-0.0055475)/100;
-        NO2Enviro = (float) Math.round(100 * ((Integer.parseInt(specParser(gasesData,12,15), 16) * Math.pow(10, -6)) - 1.25)/-0.0165620)/100;
+        SO2Enviro = (float) (Integer.parseInt(specParser(gasesData,16,19), 16) * Math.pow(10, -6));
+        COEnviro = (float) (Integer.parseInt(specParser(gasesData,4,7), 16) * Math.pow(10, -6));
+        O3Enviro = (float) (Integer.parseInt(specParser(gasesData,8,11), 16) * Math.pow(10, -6));//TODO these formulas are not correct yet
+        NO2Enviro = (float) (Integer.parseInt(specParser(gasesData,12,15), 16) * Math.pow(10, -6));
+        particulateMatterEnviro = (float) Math.round((((Integer.parseInt(specParser(gasesData,0,3), 16) * Math.pow(10, -6)) * 0.17) - 0.1) * 10000)/10;
     }
+
+    public void setSoundEnviro(byte[] soundData) {
+        int voltage = (int) (Integer.parseInt(specParser(soundData,0,3), 16) * Math.pow(10, -3));
+        soundEnviro = (int) Math.round(20 * Math.log10(voltage/8) + 52);
+    }
+
     public static String convertHex(int n) {
         String out = Integer.toHexString(n);
         if (out.length() == 1) {
@@ -219,11 +267,19 @@ public class SensorData {
         return batteryLevel;
     }
 
+    public int getSoundEnviro() { return soundEnviro; }
+
     public float getAccelerometerX(){ return accelerometerX; }
 
     public float getAccelerometerY(){ return accelerometerY; }
 
     public float getAccelerometerZ(){ return accelerometerZ; }
+
+    public int getUVEnviro() { return UVEnviro; }
+
+    public int getLuxEnviro() { return luxEnviro; }
+
+    public float getParticulateMatterEnviro() { return particulateMatterEnviro; }
 
     public int getTemperatureNordic() { return temperatureNordic; }
 
@@ -260,6 +316,10 @@ public class SensorData {
     public boolean getCO2SensorOn() { return CO2SensorOn; }
 
     public void setCO2SensorOn(boolean b) { CO2SensorOn = b; }
+
+    public boolean getPMSensorOn() { return PMSensorOn; }
+
+    public void setPMSensorOn(boolean b) { PMSensorOn = b; }
 
     public boolean getSO2SensorOn() { return SO2SensorOn; }
 

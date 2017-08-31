@@ -52,7 +52,8 @@ public class WibiSmartGatt {
     public UUID SPEC_PEROÏOD_CHAR_UUID_ENVIRO = UUID.fromString("0000bb44-0000-1000-8000-00805f9b34fb");
 
 
-
+    public UUID MIC_SERVICE_UUID_ENVIRO = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb");
+    public UUID MIC_DATA_CHAR_UUID_ENVIRO = UUID.fromString("0000fff4-0000-1000-8000-00805f9b34fb");
 
 //    public UUID
 //

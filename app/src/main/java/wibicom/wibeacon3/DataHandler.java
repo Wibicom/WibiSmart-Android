@@ -237,17 +237,21 @@ public class DataHandler {
                 results.put("temperature", "");
                 results.put("humidity", "");
                 results.put("pressure", "");
+                results.put("UV", "");
                 results.put("CO2", "");
+                results.put("sound", "");
                 return results;
             }
-            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"$or\" : [{\"eventType\" : \"air\"}, {\"eventType\" : \"CO2\"}] },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
+            List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"$or\" : [{\"eventType\" : \"air\"}, {\"eventType\" : \"CO2\"}, {\"eventType\" : \"sound\"}] },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
             Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
             Log.d(TAG, "QueryWithIndexTask weather retrieved " + out.size() + " data points.");
             HashMap<String, String> results = new HashMap<String, String>();
             results.put("temperature", "");
             results.put("humidity", "");
             results.put("pressure", "");
+            results.put("UV", "");
             results.put("CO2", "");
+            results.put("sound", "");
             int size = out.size();
             int inc = size/25;
             boolean done = false;
@@ -269,10 +273,15 @@ public class DataHandler {
                         addDataPointToCSVString(thisMap, tempMap, results, "temperature", "temperature");
                         addDataPointToCSVString(thisMap, tempMap, results, "humidity", "humidity");
                         addDataPointToCSVString(thisMap, tempMap, results, "pressure", "pressure");
+                        if(tempMap.get("UV") != null) {
+                            addDataPointToCSVString(thisMap, tempMap, results, "UV", "UV");
+                        }
                         break;
                     case "CO2":
                         addDataPointToCSVString(thisMap, tempMap, results, "CO2", "CO2");
                         break;
+                    case "sound":
+                        addDataPointToCSVString(thisMap, tempMap, results, "sound", "soundLevel");
                     default:
                         break;
                 }
@@ -308,6 +317,11 @@ public class DataHandler {
                 HashMap<String, String> results = new HashMap<String, String>();
                 results.put("battery", "");
                 results.put("light", "");
+                results.put("SO2", "");
+                results.put("CO", "");
+                results.put("O3", "");
+                results.put("NO2", "");
+                results.put("PM", "");
                 return results;
             }
             List<LinkedTreeMap> out = (List<LinkedTreeMap>) targetDatabase.findByIndex("{\"selector\": {\"deviceId\" : \""+params[1]+"\", \"$or\" : [{\"eventType\" : \"battery\"}, {\"eventType\" : \"health\"}, {\"eventType\" : \"gases\"}] },\"fields\": [\"timestamp\",\"data.d\",\"eventType\"],\"sort\": []}", LinkedTreeMap.class);
@@ -320,6 +334,7 @@ public class DataHandler {
             results.put("CO", "");
             results.put("O3", "");
             results.put("NO2", "");
+            results.put("PM", "");
             int size = out.size();
             int inc = size/25;
             boolean done = false;
@@ -348,6 +363,8 @@ public class DataHandler {
                         addDataPointToCSVString(thisMap, tempMap, results, "CO", "CO");
                         addDataPointToCSVString(thisMap, tempMap, results, "O3", "O3");
                         addDataPointToCSVString(thisMap, tempMap, results, "NO2", "NO2");
+                        addDataPointToCSVString(thisMap, tempMap, results, "PM", "PM");
+                        break;
                     default:
                         break;
                 }

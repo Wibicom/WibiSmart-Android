@@ -27,7 +27,10 @@ import wibicom.wibeacon3.SensorData;
 import wibicom.wibeacon3.SliderDialog;
 import wibicom.wibeacon3.WibiSmartGatt;
 
-
+/**
+ * The FragmentSettingsEnviro is used when an enviro device is currently selected. It has multiple preferences with a callback that is triggered when
+ * the preferences are changed and executes an appropriate action (ex. write 0x01 on a configuration characteristic to turn a sensor on)
+ */
 
 public class FragmentSettingsEnviro extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -44,6 +47,7 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
     boolean nonManualWeatherCheckBoxChange = false;
     boolean nonManualLightCheckBoxChange = false;
     boolean nonManualCO2CheckboxChange = false;
+    boolean nonManualPMCheckboxChange = false;
     boolean nonManualSO2CheckBoxChange = false;
     boolean nonManualCOCheckBoxChange = false;
     boolean nonManualO3CheckBoxChange = false;
@@ -86,7 +90,7 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
 
     }
 
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) { //This event triggers when there is a change in the preferences, we then execute the appropriate action depending on what the key of the preference is.
         Preference pref = findPreference(key);
         SensorData sensor = MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition());
 
@@ -209,9 +213,9 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
 
                     byte value[] = {0x00};
                     if (checkBoxPreference.isChecked())
-                        value[0] = altitudeDependentValue(sensor.getAltitude());
+                        value[0] = 0x01;
 
-                    sensor.setCO2SensorOn(value[0] > 0);
+                    sensor.setCO2SensorOn(value[0] == 1);
                     UUID uuid = WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO;
                     Log.d(TAG, "CO2 checkbox toggled to " + value[0]);
                     if (sensor.getHasCO2Sensor()) {
@@ -250,14 +254,6 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                 if (!nonManualAltitudeChange) {
                     EditTextPreference editTextPref = (EditTextPreference) pref;
                     sensor.setAltitude(Integer.parseInt(editTextPref.getText()));
-                    if (sensor.getCO2SensorOn()) {
-                        UUID uuid = WibiSmartGatt.getInstance().CO2_CONF_CHAR_UUID_ENVIRO;
-                        byte[] value = {altitudeDependentValue(sensor.getAltitude())};
-                        Log.d(TAG, "altitude change with sensor on, rewriting value " + value[0] + " for altitude " + sensor.getAltitude());
-                        mListener.writeCharacteristic(uuid, value);
-                    } else {
-                        Log.d(TAG, "altitude change with sensor off recorded value " + sensor.getAltitude());
-                    }
                 }
                 nonManualAltitudeChange = false;
                 break;
@@ -282,22 +278,55 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                 }
                 break;
             }
+            case "PM_checkbox_enviro": {
+                if (!nonManualPMCheckboxChange) {
+                    CheckBoxPreference checkBoxPreferenceSO2 = (CheckBoxPreference) pref;
+                    byte value[] = {0};
+
+                    if (getPMCheckbox()) {
+                        value[0] += 1;
+                    }
+                    if (getSO2Checkbox()) {
+                        value[0] += 2;
+                    }
+                    if (getCOCheckbox()) {
+                        value[0] += 4;
+                    }
+                    if (getO3Checkbox()) {
+                        value[0] += 8;
+                    }
+                    if (getNO2Checkbox()) {
+                        value[0] += 16;
+                    }
+                    sensor.setPMSensorOn(checkBoxPreferenceSO2.isChecked());
+                    UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
+                    Log.d(TAG, "PM checkbox toggled to " + value[0]);
+                    if (sensor.getHasGasesSensor()) {
+                        mListener.writeCharacteristic(uuid, value);
+                    }
+                }
+                nonManualSO2CheckBoxChange = false;
+                break;
+            }
             case "SO2_checkbox_enviro": {
                 if (!nonManualSO2CheckBoxChange) {
                     CheckBoxPreference checkBoxPreferenceSO2 = (CheckBoxPreference) pref;
                     byte value[] = {0};
 
-                    if (getSO2Checkbox()) {
+                    if (getPMCheckbox()) {
                         value[0] += 1;
                     }
-                    if (getCOCheckbox()) {
+                    if (getSO2Checkbox()) {
                         value[0] += 2;
                     }
-                    if (getO3Checkbox()) {
+                    if (getCOCheckbox()) {
                         value[0] += 4;
                     }
-                    if (getNO2Checkbox()) {
+                    if (getO3Checkbox()) {
                         value[0] += 8;
+                    }
+                    if (getNO2Checkbox()) {
+                        value[0] += 16;
                     }
                     sensor.setSO2SensorOn(checkBoxPreferenceSO2.isChecked());
                     UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
@@ -314,17 +343,20 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                     CheckBoxPreference checkBoxPreferenceCO = (CheckBoxPreference) pref;
                     byte value[] = {0};
 
-                    if (getSO2Checkbox()) {
+                    if (getPMCheckbox()) {
                         value[0] += 1;
                     }
-                    if (getCOCheckbox()) {
+                    if (getSO2Checkbox()) {
                         value[0] += 2;
                     }
-                    if (getO3Checkbox()) {
+                    if (getCOCheckbox()) {
                         value[0] += 4;
                     }
-                    if (getNO2Checkbox()) {
+                    if (getO3Checkbox()) {
                         value[0] += 8;
+                    }
+                    if (getNO2Checkbox()) {
+                        value[0] += 16;
                     }
                     sensor.setCOSensorOn(checkBoxPreferenceCO.isChecked());
                     UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
@@ -341,17 +373,20 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                     CheckBoxPreference checkBoxPreferenceO3 = (CheckBoxPreference) pref;
                     byte value[] = {0};
 
-                    if (getSO2Checkbox()) {
+                    if (getPMCheckbox()) {
                         value[0] += 1;
                     }
-                    if (getCOCheckbox()) {
+                    if (getSO2Checkbox()) {
                         value[0] += 2;
                     }
-                    if (getO3Checkbox()) {
+                    if (getCOCheckbox()) {
                         value[0] += 4;
                     }
-                    if (getNO2Checkbox()) {
+                    if (getO3Checkbox()) {
                         value[0] += 8;
+                    }
+                    if (getNO2Checkbox()) {
+                        value[0] += 16;
                     }
                     sensor.setO3SensorOn(checkBoxPreferenceO3.isChecked());
                     UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
@@ -368,17 +403,20 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                     CheckBoxPreference checkBoxPreferenceNO2 = (CheckBoxPreference) pref;
                     byte value[] = {0};
 
-                    if (getSO2Checkbox()) {
+                    if (getPMCheckbox()) {
                         value[0] += 1;
                     }
-                    if (getCOCheckbox()) {
+                    if (getSO2Checkbox()) {
                         value[0] += 2;
                     }
-                    if (getO3Checkbox()) {
+                    if (getCOCheckbox()) {
                         value[0] += 4;
                     }
-                    if (getNO2Checkbox()) {
+                    if (getO3Checkbox()) {
                         value[0] += 8;
+                    }
+                    if (getNO2Checkbox()) {
+                        value[0] += 16;
                     }
                     sensor.setNO2SensorOn(checkBoxPreferenceNO2.isChecked());
                     UUID uuid = WibiSmartGatt.getInstance().SPEC_CONF_CHAR_UUID_ENVIRO;
@@ -495,6 +533,21 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
     public boolean getCO2CalibrationCheckbox()
     {
         CheckBoxPreference pref = (CheckBoxPreference)findPreference("CO2_calibration");
+        if (pref != null)
+            return pref.isChecked();
+        return false;
+    }
+
+    public void setPMCheckbox(boolean check)
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("PM_checkbox_enviro");
+        if (pref != null)
+            pref.setChecked(check);
+    }
+
+    public boolean getPMCheckbox()
+    {
+        CheckBoxPreference pref = (CheckBoxPreference)findPreference("PM_checkbox_enviro");
         if (pref != null)
             return pref.isChecked();
         return false;
@@ -643,18 +696,14 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
     public void doneCO2Calibration(SensorData sensor) {
         Log.d(TAG, "done CO2 calibration for device" + sensor.getLocalName());
 
-            if (sensor.getCO2Calibrating()) {
-                Log.d(TAG, "CO2 calibration for device " + sensor.getLocalName() + "finished");
-                sensor.setCO2Calibrating(false);
-            }
-            else {
-                Log.d(TAG, "CO2 calibration for device " + sensor.getLocalName() + "was probably aborted...");
-            }
-            if(MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()) == sensor) {
-                nonManualCO2CheckboxChange = (sensor.getCO2SensorOn());
-                setCO2Checkbox(false);
-                setCO2CalibrationCheckbox(false);
+        if (sensor.getCO2Calibrating()) {
+            Log.d(TAG, "CO2 calibration for device " + sensor.getLocalName() + " finished");
+            sensor.setCO2Calibrating(false);
         }
+        else {
+            Log.d(TAG, "CO2 calibration for device " + sensor.getLocalName() + "was probably aborted...");
+        }
+
 
     }
 
@@ -696,7 +745,7 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
 
 
 
-    public void syncSettings() {
+    public void syncSettings() { //This method is called whenever a device is first connected or when we select a device. It looks at the servicecs that the device has and removes the preferences that do not apply to the selected device.
         Log.d(TAG, "entering syncSettings()");
         ArrayList<BluetoothGattService> gattList = new ArrayList<>(MainActivity.getInstance().getSensorDataList().get(MainActivity.getInstance().getConnectedDevicePosition()).getConnecteddeviceGatt().getServices());
         boolean weatherSevice = false;
@@ -732,7 +781,6 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
                 gasesService = true;
             }
         }
-
         Log.d(TAG, ".syncSettings() Results: { accel: "+ accelerometerService + ", weather:" + weatherSevice+ ", CO2:" + CO2Service + ", gases:" + gasesService + ", light:" + lightService+ "}");
 
         if(myPreferenceScreeen != null) {
@@ -765,6 +813,8 @@ public class FragmentSettingsEnviro extends PreferenceFragment implements Shared
         setLightCheckbox(sensor.getLightSensorOn());
         nonManualWeatherCheckBoxChange = (sensor.getWeatherSensorOn() != getWeatherCheckbox());
         setWeatherCheckbox(sensor.getWeatherSensorOn());
+        nonManualPMCheckboxChange = (sensor.getPMSensorOn() != getPMCheckbox());
+        setPMCheckbox(sensor.getPMSensorOn());
         nonManualSO2CheckBoxChange = (sensor.getSO2SensorOn() != getSO2Checkbox());
         setSO2Checkbox(sensor.getSO2SensorOn());
         nonManualCOCheckBoxChange = (sensor.getCOSensorOn() != getCOCheckbox());

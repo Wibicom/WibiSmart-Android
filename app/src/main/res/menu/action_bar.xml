@@ -10,7 +10,7 @@
     <item
         android:id="@+id/action_store_locally"
         android:icon="@drawable/ic_sd_storage_black_24dp"
-        android:title="push_to_cloud"
+        android:title="store_locally"
         app:showAsAction="ifRoom"/>
 
 

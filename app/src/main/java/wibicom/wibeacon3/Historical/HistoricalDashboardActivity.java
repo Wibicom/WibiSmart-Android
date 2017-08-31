@@ -1,10 +1,12 @@
 package wibicom.wibeacon3.Historical;
 
 import android.app.Fragment;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 
 import java.util.HashMap;
@@ -51,6 +53,18 @@ public class HistoricalDashboardActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        getFragmentManager().beginTransaction().replace(R.id.fragment_historical_dashboard_container, fragmentHistoricalDashboard).commit();
+        if(newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            fragmentHistoricalDashboard.hideInputs(false);
+        }
+        else if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            fragmentHistoricalDashboard.hideInputs(true);
+        }
     }
 
     public void dataReady(String type, HashMap<String ,String> csvMap) {

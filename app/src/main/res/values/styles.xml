@@ -19,7 +19,9 @@
         <item name="android:textColor">#ff0000</item>
     </style>
 
-
+    <style name="DatePickerDialogTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="colorAccent">@color/colorPrimary</item>
+    </style>
 
 
 </resources>

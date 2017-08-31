@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <link href = "oneDevice_dashboard.css" rel="stylesheet">
+    <link href = "bootstrap.css" rel="stylesheet">
+</head>
+<body>
+
+<div class = "sensor-name-min" style="text-align:center; padding-top:5px">UV</div>
+
+<div class = "gauge-section" style="padding-top:0px; padding-bottom:10px; position:relative; bottom:30px">
+<label id = "UVvalue" class = "data-value-min" style="position:relative; top:90px;"></label>
+<canvas id="UVgauge" class = "gauge" height="80" width="110" ></canvas>
+</div>
+
+
+<script src = "jquery-3.2.1.min.js"></script>
+<script src = "bootstrap.js"></script>
+<script src = "gauge.min.js"></script>
+<script src = "UV_widget.js"></script>
+
+</body>
+</html>

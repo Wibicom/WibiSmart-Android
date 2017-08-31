@@ -1,0 +1,14 @@
+.soundContainer {
+	padding: 100px 0 0 0; 
+}
+
+.soundbar {
+    background: #000;
+  float: left;
+  height: 1px;
+  margin: 0 1px 0 0;
+  position: relative;
+  transition: all linear 300ms;
+  width: 5px;
+  -webkit-box-reflect:below -1px -webkit-gradient(linear, left top, left bottom, from(transparent), color-stop(0.35, transparent), to(white));
+}
